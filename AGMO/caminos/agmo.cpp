@@ -1,54 +1,161 @@
-#include "util.cpp"
+#include <bits/stdc++.h>
+#define see(X) cout<<#X<<" "<<X<<endl;
+using namespace std;
+double Pi= 3.14159;
+double inf = 10000000.00001;
 
-#define TAM_POB 8 //N 	Tamaño de la Población: 4
-#define TAM_CROM 10 //Tamaño de los Cromosomas: 5
-#define ITERACIONES 1000 //Cantidad de Iteraciones: 30
-#define PROB_CRU 0.8 //Probabilidad de Cruzamiento: 0.9 
-#define CRU_PUNTO 3 //Cruzamiento de un Punto - Punto 3
-#define PROB_MUT 40 // 0.5-1% Probabilidad de Mutación: 0.05
-		
-int M = 3; //N=TAM_POB
+typedef struct{
+	vector<int> cro;
+	double fitness;
+}individuo;
 
+typedef vector<individuo> poblacion;
+typedef vector<double> vd;
+typedef vector<int> vi;
 
-vvi busqueda_local(vvi h);
+int TAM_CROM = 10;
+char labels_cities[]={'A','B','C','D','E','F','G','H','I','J'}; 
+int cities[]={0,1,2,3,4,5,6,7,8,9}; 
+double DISTANCES[10][10]={
+					{	0,	12,	3,	23,	1,	5,	23,	56,	12,	11},
+					{	12,	0,	9,	18,	3,	41,	45,	5,	41,	27},
+					{	3,	9,	0,	89,	56,	21,	12,	48,	14,	29},
+					{	23,	18,	89,	0,	87,	46,	75,	17,	50,	42},
+					{	1,	3,	56,	87,	0,	55,	22,	86,	14,	33},
+					{	5,	41,	21,	46,	55,	0,	21,	76,	54,	81},
+					{	23,	45,	12,	75,	22,	21,	0,	11,	57,	48},
+					{	56,	5,	48,	17,	86,	76,	11,	0,	63,	24},
+					{	12,	41,	14,	50,	14,	54,	57,	63,	0,	9},
+					{	11,	27,	29,	42,	33,	81,	48,	24,	9,	0}
+					};
+double COSTS[10][10]={	
+					{	0,	22,	47,	15,	63,	21,	23,	16,	11,	9},
+					{	22,	0,	18,	62,	41,	52,	13,	11,	26,	43},
+					{	47,	18,	0,	32,	57,	44,	62,	20,	8,	36},
+					{	15,	62,	32,	0,	62,	45,	75,	63,	14,	12},
+					{	63,	41,	57,	62,	0,	9,	99,	42,	56,	23},
+					{	21,	52,	44,	45,	9,	0,	77,	58,	22,	14},
+					{	23,	13,	62,	75,	99,	77,	0,	30,	25,	60},
+					{	16,	11,	20,	63,	42,	58,	30,	0,	66,	85},
+					{	11,	26,	8,	14,	56,	22,	25,	66,	0,	54},
+					{	9,	43,	36,	12,	23,	14,	60,	85,	54,	0}
+					};
 
-vvi get_poblacion_inicial(){
-	vvi pi;
-	for (int i = 0; i < TAM_POB*M; ++i){
-		vi t;
-		for (int j = 0; j < TAM_CROM; ++j){
-			t.push_back(CAMINO[j]);
-		}
-		for (int j = 0; j < TAM_CROM; ++j){
-			int n = rand()%TAM_CROM;
-			int m = rand()%TAM_CROM;
-			int temp=t[n];
-			swap(t[n],t[m]);	
-		}	
-		pi.push_back(t);
+int getRandom(int li, int ls){  return li + static_cast <int> (rand()) /( static_cast <int> (RAND_MAX/(ls-li)));}
+//distancias
+double fx(individuo I){  
+	double s=0;
+	for (int j = 0; j < I.cro.size()-1; ++j){
+		int p1 = I.cro[j];
+		int p2 = I.cro[j+1];
+		s+=DISTANCES[p1][p2];
 	}
-	return pi;
+	return s;
+}
+//costos
+double gx(individuo I){ 
+	double s=0;
+	for (int j = 0; j < I.cro.size()-1; ++j){
+		int p1 = I.cro[j];
+		int p2 = I.cro[j+1];
+		s+=COSTS[p1][p2];
+	}
+	return s;
+}
+
+double w[]={1,1};
+
+bool Mejor(individuo a, individuo b){
+	if(a.fitness < b.fitness)//< minimizar | > maximizar
+		return true;
+	return false;
+}
+
+//ordenamiento fot fx |(x,y) == (fx,gx)
+bool decresiente(individuo a, individuo b){
+	double fa = fx(a);
+	double fb = fx(b);
+	if( fa > fb){
+		return true;
+	}else{
+		return false;
+	}
+}
+
+// 0<= x <=5
+// 0<= y <=3
+double mix_x = 0;
+double max_x = 5;
+double min_y = 0;
+double max_y = 3;
+#define PROB_MUT 5 // 0.5-1% [0-100]Probabilidad de Mutación: 0.05
+#define PROB_CRU 80 //Probabilidad de Cruzamiento: 0.9
+
+double get_fitness(individuo I){
+	return w[0]*fx(I) + w[1]*gx(I);
 }
 
 
+bool es_valido(individuo &I){
+	return true;
+}
 
-vi ruleta(vvi p){
-	vf f = get_fitness(p);
-	int total = suma_vf(f);
-	float cont=0;
-	vf v_pro;//ruleta
-	for (int i = 0; i < f.size(); ++i){
-		cont += (f[i]*100.0)/total;
+
+poblacion get_poblacion_inicial(int tam_poblacion){
+	poblacion P;
+	for (int i = 0; i < tam_poblacion; ++i){
+		individuo I;
+		for (int j = 0; j < TAM_CROM; ++j){
+			I.cro.push_back(cities[j]);//0,1,..,9 //ciudades ordenadas
+		}
+		for (int j = 0; j < TAM_CROM; ++j){
+			int n = rand()%5;
+			int m = rand()%5;
+			swap(I.cro[n],I.cro[m]);	
+		}	
+		I.fitness = get_fitness(I);
+		P.push_back(I);
+	}
+	return P;
+}
+
+string p_cro(individuo I){
+	string c="";
+	for(auto i:I.cro){
+		c+=labels_cities[i];
+	}
+	return c;
+}
+
+void imprimir_poblacion(poblacion P){
+	for (int i = 0; i < P.size(); ++i){
+		individuo I = P[i];
+		//cout<<i+1<<") "<<" "<<fx(I)<<" "<<gx(I)<<"	"<<"	|"<<I.fitness<<endl;
+		cout<<i+1<<") "<<p_cro(I)<<"	"<<fx(I)<<" "<<gx(I)<<"	"<<"	|"<<I.fitness<<endl;
+		//cout<<i+1<<") "<<I.cro[0]<<" "<<I.cro[1]<<"	"<<"	|"<<   <<I.fitness<<endl;
+		//cout<<i+1<<") "<<I.cro[0]<<"	"<<I.cro[0]<<"|	"<<I.fitness<<endl;
+	}
+}
+
+poblacion ruleta(poblacion &P){
+	int total=0;
+	for (int i = 0; i < P.size(); ++i){
+		total+=P[i].fitness;
+	}
+	double cont=0;
+	vd v_pro;//ruleta
+	for (int i = 0; i < P.size(); ++i){
+		cont += (P[i].fitness*100.0)/total;
 		v_pro.push_back(cont); 
 	}
 	//seleccion
-	vi seleccionados;
+	poblacion seleccionados;
 
-	for (int i = 0; i < p.size(); ++i){
+	for (int i = 0; i < P.size(); ++i){//P.size()
 		int s= rand()%100;
 		for (int j = 0; j < v_pro.size(); ++j){//verificando a q rango pertenece
 			if( s <= v_pro[j] ){
-				seleccionados.push_back(j);
+				seleccionados.push_back(P[j]);
 				break;
 			}
 		}
@@ -56,103 +163,46 @@ vi ruleta(vvi p){
 	return seleccionados;
 }
 
+poblacion torneo(poblacion P){
+	poblacion seleccionados;
 
-
-vi torneo(vvi p){
-	vi seleccionados;
-	vf f = get_fitness(p);
-	int participantes=3;	
-	for (int ii = 0; ii < f.size(); ++ii){
-		priority_queue< pair< float,int > > pq;
-		for (int j = 0; j < participantes; ++j){
-			int p_i = rand()%p.size();
-			pq.push(make_pair( inf-f[p_i], p_i ));
+	int tam_torneo = 3;
+	for (int i = 0; i < P.size(); ++i){//seleccionar dos padres
+		poblacion p_torneo;
+		for (int i = 0; i < tam_torneo; ++i){
+			p_torneo.push_back( P[rand()%P.size()] );
 		}
-		seleccionados.push_back( pq.top().second );
-	}	
+		sort(p_torneo.begin(), p_torneo.end(), Mejor);	
+		seleccionados.push_back(p_torneo[0]);
+	}
 	return seleccionados;
 }
 
-vi seleccion(vvi p){
-	//return ruleta(p);
-	return torneo(p);
+poblacion seleccion(poblacion &P){
+	//return ruleta(P);
+	return torneo(P);
 }
 
-/*--PBX*/
-vi asignar(vi padre, vi hijo, vi puntos){
-	int cro_i =0;
-	for (int i = 0; i < TAM_CROM; ++i){
-		if( !find(puntos,i) ){//si no es un punto seleccionado
-			while(cro_i<TAM_CROM){
-				if( !find(hijo,padre[cro_i]) ){//si no existe cromosoma en el hijo
-					hijo[i]=padre[cro_i];
-					break;
-				}
-				++cro_i;
-			}
+
+int find_poss(vi v,int key){
+	for (int i = 0; i < v.size(); ++i){
+		if( key==v[i] ){
+			return i;
 		}
 	}
-	return hijo;
-}
+	return -1;
+} 
 
-vvi PBX(vi p1,vi p2){
-	int num_puntos=3;
-	vvi hijos;
-	vi puntos;
-	vi h1=p1;
-	vi h2=p2;
-	//puntos random, swap 
-	for (int i = 0; i < num_puntos; ++i){
-		int pi = rand()%TAM_CROM;
-		if( !find(puntos, pi) ){
-			puntos.push_back(pi);
-			swap(h1[pi],h2[pi]);
-		}else{
-			--i;
-		}
 
-	}
-	//vacios
-	for (int i = 0; i < TAM_CROM; ++i){
-		if( !find(puntos,i)){
-			h1[i]=inf;
-			h2[i]=inf;
-		}
-	}
-	cout<<"seleccionados: ";
-	print_vi(puntos);
 
-	h1=asignar(p1,h1,puntos);
-	h2=asignar(p2,h2,puntos);
-	hijos.push_back(h1);
-	hijos.push_back(h2);
-	cout<<"Hijos:"<<endl;
-	//print_vvi_labels(hijos);
-	imprimir_fit_poblacion(hijos);
-	return hijos;
-}
-/*PMX*/
-vvi PMX(vi p1,vi p2){
-	vi puntos;
-	vvi hijos;
-	/* punto s aleatorios*/
-	int point1 = 1;//rand()%TAM_CROM;
-	int point2 = 4;//rand()%TAM_CROM;
-	while(point1==point2){
-		point2=rand()%TAM_CROM;
-	}
+poblacion PMX(individuo P1,individuo P2){
+	vi p1 = P1.cro; 
+	vi p2 = P2.cro;  
 
-	if(point2<point1){swap(point1,point2);}
-	cout<<"Puntos: "<<point1<<" "<<point2<<endl;
-
+	int point1 = 3;
+	int point2 = 6;
 	for (int i = 0; i < TAM_CROM; ++i){
 		if( point1<=i && i<point2){ //sublista
-			/*see("padres__________");
-			see("cromosoma");
-			see(i);
-			print_vi_labels(p1);
-			print_vi_labels(p2);
-			*/
 			int val_label_p1 = p1[i];  
 			int val_label_p2 = p2[i];
 			int dir1=find_poss(p1,val_label_p2);
@@ -160,211 +210,183 @@ vvi PMX(vi p1,vi p2){
 			p1[dir1]=val_label_p1;
 			p2[dir2]=val_label_p2;
 			swap(p1[i],p2[i]); 
-			/*
-			see("hijos---temporales");
-			print_vi_labels(p1);
-			print_vi_labels(p2);
-			see("_______________");
-			*/
 		}	
 	}
-	hijos.push_back(p1);
-	hijos.push_back(p2);
-	cout<<"Hijos:"<<endl;
-	print_vvi_labels(hijos);
 
+	poblacion hijos;
+	individuo h1;
+	h1.cro = p1;
+	h1.fitness = get_fitness(h1);
+
+	individuo h2;
+	h2.cro = p2;
+	h2.fitness = get_fitness(h2);
+
+	hijos.push_back(h1);
+	hijos.push_back(h2);
 	return hijos;
 }
 
-vvi CX(vi p1,vi p2){
-	vvi hijos;
-	vi h1;
-	vi h2;
-	for (int i = 0; i < TAM_CROM; ++i){
-		h1.push_back(inf);
-		h2.push_back(inf);
-	}
-
-	int poss=0;
-	int poss_h=poss;
-	for (int i = 0; i < TAM_CROM; ++i){//bucle
-		h1[poss]=p1[poss];
-		h2[poss]=p2[poss];
-		poss = find_poss(p1,p2[poss]);
-		if(poss==0){
-			break;
+poblacion cruzamiento(poblacion &P){
+	poblacion hijos;
+	for (int i = 0; i < P.size()/2;){
+		int h = rand()%P.size();
+		int k = rand()%P.size();
+		int prob = rand()%100;
+		if( prob <PROB_CRU){
+			poblacion r = PMX(P[h],P[k]);
+			hijos.push_back(r[0]); //hijo1
+			hijos.push_back(r[1]); //hijo2
+			i++;
 		}
-	}
-	/**/
-	for (int i = 0; i < TAM_CROM; ++i){//los q faltan
-		if(h1[i]==inf){
-			h1[i]=p2[i];
-			h2[i]=p1[i];
-		}
-	}
 
-	hijos.push_back(p1);
-	hijos.push_back(p2);
-	cout<<"Hijos:"<<endl;
-	print_vvi_labels(hijos);
+	}
 	return hijos;
 }
 
-vvi cruzar(vi p1,vi p2){ //PBX
-	//return PBX(p1,p2);	
-	return PMX(p1,p2);	
-	//return CX(p1,p2);
-}
-
-//muta bit del individuo elegido aleatoriamente 
-
-
-//muta bit del individuo elegido aleatoriamente 
-vvi mutar(vvi p, float pro_mutacion){
-	for (int i = 0; i < p.size(); ++i){
-		float pm=rand()%100;
-		if( pm <= pro_mutacion ){//para cada individuo
+void mutar(poblacion &P){
+	for (int i = 0; i < P.size();++i){
+		int pro_mut = rand()%100;
+		if(pro_mut <= PROB_MUT ){
+			cout<<"mutacion en individuo: "<< i+1<<endl;;
 			int c1 = rand()%TAM_CROM;
-			int c2 = rand()%TAM_CROM;
-			cout<<"mutacion en individuo: "<< i+1<<") en: "<<c1<<" y "<<c2<<endl;;
-			swap(p[i][c1], p[i][c2]);
+			int c2 = rand()%TAM_CROM;	
+			swap(P[i].cro[c1],P[i].cro[c2]);
+			P[i].fitness = get_fitness(P[i]);
 		}
 	}
-	return p;
 }
 
 
-vi mejor_hijo(vi I){
-	vi temp=I;
-	vvi mejores;
-	for(int i = 0; i < 5; ++i){
-		int c1 = rand()%TAM_CROM;
-		int c2 = rand()%TAM_CROM;
-		swap(temp[c1], temp[c2]);
-		if( get_fitness(temp) <= get_fitness(I)  ){
-			mejores.push_back(temp);
-		}
-		temp = I;
-	}
 
-	vi top=I;
-	for (int i = 0; i < mejores.size(); ++i){
-		if( get_fitness(mejores[i]) <= get_fitness(top) ){
-			top = mejores[i];
-			top = mejor_hijo(mejores[i]);
-		}
+
+//retorna la primera frontera y el resto
+vector<poblacion> get_frontier(poblacion P){
+	poblacion p_frontera;//fontera
+	poblacion P_resto; //no estan en la frontera
+	sort(P.begin(), P.end(), decresiente);//ordenar soluciones en x o fx
+
+	stack<individuo> front;
+	front.push(P[0]);
+	for (int i = 1; i < P.size(); ++i){
+	    while( !front.empty() ){
+	    	double top_x = fx( front.top() );
+	    	double top_y = gx( front.top() );
+	    	double x = fx( P[i]);
+	    	double y = gx( P[i]);
+	    	if( top_x >= x  &&  top_y >= y){
+	    		//cout<<top_x<<">="<<x<<"	"<<top_y<<">="<<y<<endl;
+	    		//see("enter");	
+	    		P_resto.push_back(front.top());    	
+	    		front.pop();
+	    	}
+	    	else{
+	    		break;
+	    	}
+	    }    	
+		front.push(P[i]);
 	}
-	return top;
+	while( !front.empty() ){
+		p_frontera.push_back(front.top());
+		//cout<<fx(front.top(),front.top())<<" "<<gx(front.top(),front.top())<<endl;
+		front.pop();
+	}
+	vector<poblacion> fronteras;
+	fronteras.push_back( p_frontera );
+	fronteras.push_back( P_resto );
+	return fronteras;
+}
+
+vector<poblacion> get_fronteras(poblacion P){
+	poblacion contenedor=P;
+	vector<poblacion> fronteras;
+	while(contenedor.size()>0){
+		vector<poblacion> r = get_frontier(contenedor);
+		fronteras.push_back(r[0]);
+		contenedor = r[1];
+	}
+	return fronteras;
 }
 
 
-vvi busqueda_local(vvi h){
-	vvi mejores_hijos;
-	for (int i = 0; i < h.size(); ++i){//para cada hijo
-		mejores_hijos.push_back( mejor_hijo(h[i]) );
-	}	
-	return mejores_hijos;
+double distancia(individuo I1, individuo I2){
+	double dx = abs(fx(I1) - fx(I2));//x
+	double dy = abs(gx(I1) - gx(I1));//y
+	return 2*dx + 2*dy;
 }
+
 
 
 void run(){
-	cout<<"Tamaño de la Población: "<<TAM_POB<<endl;
-	cout<<"Tamaño de los Cromosomas: "<<TAM_CROM<<endl;
-	cout<<"Cantidad de Iteraciones: "<<ITERACIONES<<endl;
-	cout<<"Probabilidad de Cruzamiento: "<<PROB_CRU<<endl;
-	cout<<"Cruzamiento de un Punto - Punto1: "<<CRU_PUNTO<<endl;
-	cout<<"Probabilidad de Mutación: "<<PROB_MUT<<endl;
-
-	cout<<"Generando soluciones"<<endl;
-	vvi p = get_poblacion_inicial();
-	imprimir_poblacion(p);
-
-	cout<<"\nGenerando Población Inicial"<<endl;
-	vf p_fit1 =  get_fitness(p);
-	priority_queue< pair< float,vi > > ppq;
-
-	for (int i = 0; i < p.size(); ++i){
-		int fi=p_fit1[i];
-		vi v_ind1=p[i];
-		ppq.push( make_pair( inf-fi, v_ind1 ) );
-	}
-
-	vvi pp;
-	for (int i = 0; i < p.size()/3; ++i){
-		pp.push_back( ppq.top().second );
-		ppq.pop();
-	}
-	p=pp;
-	imprimir_poblacion(p);
-
-
-	for (int it = 0; it < ITERACIONES; ++it){
-	cout<<"\n-----------Iteración: "<<it<<" -----------"<<endl;
-
-		cout<<"Evaluando Individuos"<<endl;
-		imprimir_fit_poblacion(p);
-
-		cout<<"Selección de Individuos"<<endl;
-		imprimir_fit_ruleta_poblacion(p);
-		vi seleccionados = seleccion(p);
-		//print_vi(seleccionados);
-		for (int i = 0; i < (seleccionados.size()/2); ++i){
-			cout<<"\nCruzamiento"<<endl;
-			int pp;//
-			int mm;//
-			float p_cru;//
-			while(1){
-				p_cru = (rand()%100)/100;
-				pp = rand()%seleccionados.size();
-				mm = rand()%seleccionados.size();
-				if( p_cru <= PROB_CRU){
-					cout<<"padre1: "<<pp+1<<endl;
-					cout<<"padre2: "<<mm+1<<endl;
-					print_vi_labels(p[pp]);
-					print_vi_labels(p[mm]);
-					vvi hijos = cruzar(p[pp], p[mm]);//cruse
-					
-					cout<<"Busqueda local"<<endl;
-					vvi mejores_hijos = busqueda_local(hijos);
-					imprimir_fit_poblacion(mejores_hijos);
-
-					p.push_back(mejores_hijos[0]); 
-					p.push_back(mejores_hijos[1]);
-
-					break;
+	int iteraciones = 50;
+	int tam_poblacion = 100;
+	double D = 20.0;
+	poblacion P = get_poblacion_inicial( tam_poblacion );
+	for (int it = 1; it <= iteraciones; ++it){
+		cout<<"__________________ Iteracion "<<it<<" __________________"<<endl;
+		cout<<"poblacion"<<endl;
+		imprimir_poblacion(P);	
+		cout<<"seleccion"<<endl;
+		poblacion seleccionados = seleccion(P);
+		imprimir_poblacion(seleccionados);
+		
+		cout<<"____hijos_____"<<endl;
+		poblacion hijos = cruzamiento(seleccionados);//hijos (1)	
+		imprimir_poblacion(hijos);
+		//agregar hijos a la poblacion
+		for (auto I: hijos){//
+			P.push_back(I);
+		}
+		see("______________________");
+		imprimir_poblacion(P);
+		cout<<"mutacion___________"<<endl;
+		mutar(P);
+		imprimir_poblacion(P);
+		cout<<"Nueva Poblacion"<<endl;
+		
+		poblacion new_P;
+		vector<poblacion> fronteras = get_fronteras(P);
+		
+		// Nueva Poblacion
+		int cont =0;
+		int fl=1;
+		
+		int index_f=0;
+		while(fl){
+			for (auto F : fronteras){
+				index_f++;
+				//cout<<"frontera: "<<index_f<<endl;
+				for(int i=0; i<F.size(); i++){//frontera ordenada cresiente
+					if(i==0 || i==F.size()-1){
+						//cout<<i+1<<") "<<fx(F[i])<<" "<<gx(F[i])<<"	"<<"	|"<<F[i].fitness<<endl;
+						new_P.push_back(F[i]);
+						cont++;
+					}else{
+						if( distancia(F[i-1], F[i+1]) > D){//distancia
+							//cout<<i+1<<") "<<fx(F[i])<<" "<<gx(F[i])<<"	"<<"	|"<<F[i].fitness<<endl;
+							new_P.push_back(F[i]);
+							cont++;
+						}
+					}
+					if(cont == tam_poblacion){fl=0; break;}
 				}
-
+				if(cont == tam_poblacion){fl=0; break;}
 			}
 		}
-		//p = mutar(p,PROB_MUT);
-		cout<<"Selección de Siguiente Población"<<endl;
-		imprimir_fit_poblacion(p);
-
-		//
-		vf p_fit =  get_fitness(p);
-		priority_queue< pair< float,vi > > pq;
-
-		for (int i = 0; i < p.size(); ++i){
-			int fi=p_fit[i];
-			vi v_ind=p[i];
-			pq.push( make_pair( inf-fi, v_ind ) );
-		}
-
-		vvi pp;
-		for (int i = 0; i < p.size()/2; ++i){
-			pp.push_back( pq.top().second );
-			pq.pop();
-		}
-		p=pp;
+		P=new_P;
+		imprimir_poblacion(P);
 	}
 }
 
 
-
-
-
-int  main(){
-	run();
-	//test();
+void test(){
+	poblacion P = get_poblacion_inicial( 10 );
+	imprimir_poblacion(P);
 }
-/*obtener M soluciones M>=3*N (N tamño de poblacion)*/
+
+
+int main(){
+	//test();
+	run();
+	return 0;
+}
