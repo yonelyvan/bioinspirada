@@ -4,8 +4,9 @@ using namespace std;
 //double Pi= 3.14159;
 //double inf = 10000000.00001;
 
-const int TAM_CROM = 10;
+const int TAM_CROM = 5;//10;
 char LABELS[]={'A','B','C','D','E','F','G','H','I','J'}; 
+/*
 double DISTANCIAS[TAM_CROM][TAM_CROM]={
 					{	0,	12,	3,	23,	1,	5,	23,	56,	12,	11},
 					{	12,	0,	9,	18,	3,	41,	45,	5,	41,	27},
@@ -18,6 +19,15 @@ double DISTANCIAS[TAM_CROM][TAM_CROM]={
 					{	12,	41,	14,	50,	14,	54,	57,	63,	0,	9},
 					{	11,	27,	29,	42,	33,	81,	48,	24,	9,	0}
 					};
+*/
+double DISTANCIAS[TAM_CROM][TAM_CROM]={
+					{	0,	12,	3,	23,	1},
+					{	12,	0,	9,	18,	3},
+					{	3,	9,	0,	89,	56},
+					{	23,	18,	89,	0,	87},
+					{	1,	3,	56,	87,	0}
+					};
+
 
 
 typedef vector<int> vi;
@@ -91,7 +101,7 @@ void sis_hormigas::imprimir_V(){
 	for(auto v:V){
 		for (auto e: v){
 			//cout<<d<<" ";
-			printf("%.3f  ", e);
+			printf("%.4f  ", e);
 		}
 		cout<<endl;
 	}
@@ -101,7 +111,7 @@ void sis_hormigas::imprimir_F(){
 	for(auto f:F){
 		for (auto e: f){
 			//cout<<d<<" ";
-			printf("%.2f  ", e);
+			printf("%.4f  ", e);
 		}
 		cout<<endl;
 	}
@@ -129,13 +139,14 @@ bool sis_hormigas::visitado(hormiga H, int ciudad){
 
 int sis_hormigas::elegir_ciudad(hormiga H){
 
-
+	double s =0.0;
 	for (int i = 0; i < TAM_CROM; ++i){
 		if(!visitado(H,i)){//calcular probabilidade de H.ciudad_Actual a ciudad i
+			s+=get_prob(H,i);
 			cout<<LABELS[H.ciudad_actual]<<"-"<<LABELS[i]<<": prob= "<<get_prob(H,i)<<endl; //V[H.ciudad_actual][i]<<endl;
-
 		}
 	}
+	cout<<"____________________________suma: "<<s<<endl;
 
 	double suma = 0.0;
 	for (int city = 0; city < TAM_CROM; ++city){
