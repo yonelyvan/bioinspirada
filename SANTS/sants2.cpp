@@ -2,7 +2,7 @@
 #define see(X) cout<<#X<<" "<<X<<endl;
 using namespace std;
 //double Pi= 3.14159;
-//double inf = 10000000.00001;
+double inf = 10000000.00001;
 
 const int TAM_CROM = 5;//5;//10;
 char LABELS[]={'A','B','C','D','E','F','G','H','I','J'}; 
@@ -38,14 +38,14 @@ typedef vector< vector<double> > md;
 typedef struct{
 	vi camino;
 	int ciudad_actual;
-	double fitness;
+	double longitud;
 }hormiga;
 
 typedef vector<hormiga> poblacion;
 double getRandom(double li, double ls){  return li + static_cast <double> (rand()) /( static_cast <double> (RAND_MAX/(ls-li)));}
 
 bool Mejor(hormiga a, hormiga b){
-	if(a.fitness < b.fitness)//< minimizar | > maximizar
+	if(a.longitud < b.longitud)//< minimizar | > maximizar
 		return true;
 	return false;
 }
@@ -60,12 +60,14 @@ class sis_hormigas{
 		double p_evaporacion=0.99;//tasa de evaporacion
 		double Q=1.0;
 		double feromona_inicial = 0.1;
+		int num_iteraciones = 100;
 
 	private:
 		mi D;//matriz de distancias D
 		md V;//matriz visibilidad n
 		md F;//matriz feromonas T
 		poblacion P;
+		hormiga mejor_global;
 	public:
 		sis_hormigas(int n_hormigas);
 		void imprimir_D();
@@ -75,6 +77,7 @@ class sis_hormigas{
 		void run(int ciudad_inicial);
 		int elegir_ciudad(hormiga H);
 		int get_ciudad(vd probabilidades);
+		void calcular_longitudes();
 		void imprimir_camino(hormiga H);
 		void evaporar_feromona();
 		void depositar_feromona();
@@ -84,6 +87,7 @@ class sis_hormigas{
 
 sis_hormigas::sis_hormigas(int n_hormigas){
 	num_hormigas = n_hormigas;
+	mejor_global.longitud=inf;
 	D.resize(TAM_CROM);
 	V.resize(TAM_CROM);
 	F.resize(TAM_CROM);
@@ -136,7 +140,6 @@ void sis_hormigas::imprimir_F(){
 }
 
 void sis_hormigas::run(int ciudad_inicial){
-	int num_iteraciones = 100;
 	cout<<"ciudad inicial "<<LABELS[ciudad_inicial]<<endl;
 	for (int i = 0; i < num_iteraciones; ++i){
 		for (int j = 0; j < num_hormigas; ++j){
@@ -150,9 +153,9 @@ void sis_hormigas::run(int ciudad_inicial){
 				H.ciudad_actual = nueva_ciudad;
 			}
 			imprimir_camino(H);
-			//calcular fitness
 			P.push_back(H);
 		}
+		calcular_longitudes();//
 		evaporar_feromona();
 		depositar_feromona();
 		imprimir_poblacion();
@@ -168,7 +171,6 @@ bool sis_hormigas::visitado(hormiga H, int ciudad){
 	}
 	return false;
 }
-
 
 int sis_hormigas::elegir_ciudad(hormiga H){
 	//sumatoria
@@ -211,6 +213,20 @@ int sis_hormigas::get_ciudad(vd probabilidades){
 	}
 }
 
+void sis_hormigas::calcular_longitudes(){
+	for (hormiga &H : P){
+		double s = 0;
+		for (int i = 1; i < H.camino.size(); ++i){
+			s+= D[ H.camino[i-1] ][ H.camino[i] ];
+		}
+		H.longitud=s;
+	}
+	sort(P.begin(), P.end(), Mejor);
+	if( P[0].longitud < mejor_global.longitud){
+		mejor_global = P[0];
+	}
+}
+
 void sis_hormigas::imprimir_camino(hormiga H){
 	cout<<"[ ";
 	for (int ciudad : H.camino){
@@ -223,30 +239,24 @@ void sis_hormigas::evaporar_feromona(){
 	for (int i = 0; i < TAM_CROM; ++i){
 		for (int j = 0; j < TAM_CROM; ++j){
 			if(i!=j){
-				//cout<<i<<" "<<j <<endl;
-				//see(F[i][j]);
-				F[i][j] = F[i][j]*p_evaporacion;
-				//see(F[i][j]);
+				F[i][j] = (1 - p_evaporacion)*F[i][j];
 			}
 		}
 	}
 }
 
 void sis_hormigas::depositar_feromona(){
-	for (hormiga H: P){
-		//calcular logituda de camino
-		double longitud =0;
-		for (int i = 1; i < H.camino.size(); ++i){
-			longitud += D[H.camino[i-1]][H.camino[i]];
-		}
-		//see(longitud)
-		for (int i = 1; i < H.camino.size(); ++i){
-			int h = H.camino[i-1];
-			int k = H.camino[i];
-			//cout<< h <<" "<< k <<endl;
-			//see(F[h][k]);
-			F[h][k] += Q/longitud;
-			//see(F[h][k]);
+	float e=5;
+	sort(P.begin(), P.end(), Mejor);
+	for(int i=0; i<P.size(); i++){
+		for (int j = 1; j < P[i].camino.size(); ++j){
+			int h = P[i].camino[j-1];
+			int k = P[i].camino[j];
+			if(i==0){//la mejor hormiga
+				F[h][k] += Q/P[i].longitud + e*(Q/mejor_global.longitud);
+			}else{
+				F[h][k] += Q/P[i].longitud;
+			}
 		}
 	}
 }
@@ -261,7 +271,7 @@ void sis_hormigas::imprimir_poblacion(){
 		for (int i = 1; i < H.camino.size(); ++i){
 			longitud += D[H.camino[i-1]][H.camino[i]];
 		}
-		H.fitness = longitud;
+		H.longitud = longitud;
 
 		cout<<"Hormiga "<<orm<<": "; orm++;
 		for (int i = 0; i < H.camino.size(); ++i){
@@ -271,18 +281,17 @@ void sis_hormigas::imprimir_poblacion(){
 		cout<<endl;
 	}
 	//cout<<"Poblacion:"<<endl;
-	sort(P.begin(), P.end(), Mejor);
 	cout<<"\nMejor Hormiga Global: ";
-	for (int i = 0; i < P[0].camino.size(); ++i){
-		cout<<LABELS[P[0].camino[i]]<<" ";
+	for (int i = 0; i < mejor_global.camino.size(); ++i){
+		cout<<LABELS[mejor_global.camino[i]]<<" ";
 	}
-	cout<<" costo: "<<P[0].fitness<<endl;
+	cout<<" costo: "<<mejor_global.longitud<<endl;
 }
 
 
 void run(){
 	int ciudad_inicial = 3; //ciudades de 0-9
-	int num_hormigas = 3; 
+	int num_hormigas = 4; 
 	sis_hormigas SH(num_hormigas);
 	SH.imprimir_D();
 	SH.imprimir_V();

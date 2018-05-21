@@ -60,7 +60,7 @@ class sis_hormigas{
 		double p_evaporacion=0.99;//tasa de evaporacion
 		double Q=1.0;
 		double feromona_inicial = 0.1;
-		int num_iteraciones = 1;
+		int num_iteraciones = 50;
 
 	private:
 		mi D;//matriz de distancias D
@@ -155,8 +155,8 @@ void sis_hormigas::run(int ciudad_inicial){
 			imprimir_camino(H);
 			P.push_back(H);
 		}
-		calcular_longitudes();//
-		evaporar_feromona();
+		calcular_longitudes();//calcula longitudes y obtiene el mejor global
+		//evaporar_feromona();
 		depositar_feromona();
 		imprimir_poblacion();
 		P.clear();
@@ -171,7 +171,6 @@ bool sis_hormigas::visitado(hormiga H, int ciudad){
 	}
 	return false;
 }
-
 
 int sis_hormigas::elegir_ciudad(hormiga H){
 	//sumatoria
@@ -226,7 +225,6 @@ void sis_hormigas::calcular_longitudes(){
 	if( P[0].longitud < mejor_global.longitud){
 		mejor_global = P[0];
 	}
-
 }
 
 void sis_hormigas::imprimir_camino(hormiga H){
@@ -241,20 +239,25 @@ void sis_hormigas::evaporar_feromona(){
 	for (int i = 0; i < TAM_CROM; ++i){
 		for (int j = 0; j < TAM_CROM; ++j){
 			if(i!=j){
-				F[i][j] = F[i][j]*p_evaporacion;
+				F[i][j] = F[i][j];//(1 - p_evaporacion)*F[i][j];
 			}
 		}
 	}
 }
 
 void sis_hormigas::depositar_feromona(){
-	float e=5;
+	float w=6;
 	sort(P.begin(), P.end(), Mejor);
-	for(int i=0; i<P.size(); i++){
-		for (int j = 1; j < P[i].camino.size(); ++j){
-			int h = P[i].camino[j-1];
-			int k = P[i].camino[j];
-			F[h][k] += Q/P[i].longitud;
+	for(int i=0; i<P.size(); i++){//para cada hormiga  p[0] la mejor
+		int r =i;//rank
+		if( (w-r)<1 ){
+			cout<<"hormiga :"<< r<<"  no actualiza::::::::::::"<<endl;
+		}else{	
+			for (int j = 1; j < P[i].camino.size(); ++j){
+				int h = P[i].camino[j-1];
+				int k = P[i].camino[j];
+				F[h][k] += (w-r) * 1.0/P[r].longitud + w*(1.0/mejor_global.longitud);
+			}
 		}
 	}
 }
@@ -289,7 +292,7 @@ void sis_hormigas::imprimir_poblacion(){
 
 void run(){
 	int ciudad_inicial = 3; //ciudades de 0-9
-	int num_hormigas = 4; 
+	int num_hormigas = 10; 
 	sis_hormigas SH(num_hormigas);
 	SH.imprimir_D();
 	SH.imprimir_V();
