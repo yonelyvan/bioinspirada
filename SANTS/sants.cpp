@@ -138,12 +138,12 @@ void sis_hormigas::run(int ciudad_inicial){
 	int num_iteraciones=10;
 	cout<<"ciudad inicial "<<LABELS[ciudad_inicial]<<endl;
 	for (int i = 0; i < num_iteraciones; ++i){
-		for (int i = 0; i < num_hormigas; ++i){
+		for (int j = 0; j < num_hormigas; ++j){
 			cout<<"HOTMIGA: "<<i+1<<endl;
 			hormiga H;
 			H.camino.push_back(ciudad_inicial);
 			H.ciudad_actual=ciudad_inicial;
-			for (int i = 0; i < TAM_CROM-1; ++i){
+			for (int k = 0; k < TAM_CROM-1; ++k){
 				int nueva_ciudad = elegir_ciudad(H);
 				H.camino.push_back(nueva_ciudad);	
 				//see(nueva_ciudad);
@@ -157,8 +157,8 @@ void sis_hormigas::run(int ciudad_inicial){
 		//despositar feromonas
 		depositar_feromona();
 		imprimir_poblacion();
-	}
 		P.clear();
+	}
 }
 
 bool sis_hormigas::visitado(hormiga H, int ciudad){
@@ -197,8 +197,8 @@ int sis_hormigas::get_ciudad(vd probabilidades){
 	vd pro(probabilidades.size());
 	//suma = 1	
 	pro[0]=probabilidades[0];
-	for (int i = 0; i < probabilidades.size(); ++i){
-		pro[i] = probabilidades[i]+ pro[i-1];
+	for (int i = 1; i < probabilidades.size(); ++i){
+		pro[i] = pro[i-1] + probabilidades[i] ;
 		//see(pro[i]);
 	}
 	//aleatorio
@@ -226,7 +226,7 @@ void sis_hormigas::evaporar_feromona(){
 			if(i!=j){
 				//cout<<i<<" "<<j <<endl;
 				//see(F[i][j]);
-				F[i][j] =F[i][j]*p_evaporacion;
+				F[i][j] = F[i][j]*p_evaporacion;
 				//see(F[i][j]);
 			}
 		}
@@ -247,6 +247,7 @@ void sis_hormigas::depositar_feromona(){
 			//cout<< h <<" "<< k <<endl;
 			//see(F[h][k]);
 			F[ H.camino[i-1] ][H.camino[i]] += Q/longitud;
+			
 			//see(F[h][k]);
 		}
 	}
@@ -284,11 +285,12 @@ void sis_hormigas::imprimir_poblacion(){
 
 void run(){
 	int ciudad_inicial = 3; //ciudades de 0-9
-	sis_hormigas SH(ciudad_inicial);
+	int num_hormigas = 4; 
+	sis_hormigas SH(num_hormigas);
 	SH.imprimir_D();
 	SH.imprimir_V();
 	SH.imprimir_F();
-	SH.run(3);
+	SH.run(ciudad_inicial);
 }
 
 
