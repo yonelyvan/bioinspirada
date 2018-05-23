@@ -291,7 +291,7 @@ void sis_hormigas::actualizar_feromona_offline(){
 void sis_hormigas::actualizar_feromona_online(hormiga H, int nodo){
 	int i = H.nodo_actual;
 	int j = nodo;
-	F[i][j] = (1 - phi)*F[i][j] + phi*feromona_inicial;
+	F[i][j] += (1 - phi)*F[i][j] + phi*feromona_inicial;
 }
 
 void sis_hormigas::imprimir_poblacion(){ 
