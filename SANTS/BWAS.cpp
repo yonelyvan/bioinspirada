@@ -56,8 +56,6 @@ class sis_hormigas{
 		int num_hormigas = 4; 
 		int nodo_inicial = 0; //nodoes de [ ]
 		int num_iteraciones = 100;
-		double F_min=0.2;
-		double F_max=0.8;
 
 	private:
 		mi D;//matriz de distancias D
@@ -66,6 +64,7 @@ class sis_hormigas{
 		md F;//matriz feromonas T
 		poblacion P;
 		hormiga mejor_local;
+		hormiga peor_local;
 		hormiga mejor_global;
 	public:
 		sis_hormigas(int iteraciones);
@@ -73,6 +72,7 @@ class sis_hormigas{
 		void imprimir_V();
 		void imprimir_F();
 		bool visitado(hormiga H, int nodo);
+		bool existe_camino(hormiga H, int i, int j);
 		void run();
 		int elegir_nodo(hormiga H);
 		int intensificacion(hormiga H);
@@ -80,9 +80,9 @@ class sis_hormigas{
 		int get_nodo(vd probabilidades);
 		void calcular_longitudes();
 		void imprimir_camino(hormiga H);
-		void actualizar_feromona_offline();
-		void actualizar_feromona_online(hormiga H, int nodo);
+		void actualizar_feromona();
 		void imprimir_poblacion();
+		void reiniciar();
 };
 
 
@@ -106,7 +106,7 @@ sis_hormigas::sis_hormigas(int iteraciones){
 				V[i][j] = 0.0;
 				F[i][j] = 0.0;
 			}else{
-				F[i][j] = F_max;
+				F[i][j] = feromona_inicial;
 				//construccion de matriz de visibilidad
 				double e=0;
 				for (int k = 0; k < TAM_CROM; ++k){
@@ -161,16 +161,18 @@ void sis_hormigas::run(){
 			for (int k = 0; k < TAM_CROM-1; ++k){
 				int nuevo_nodo = elegir_nodo(H);
 				H.camino.push_back(nuevo_nodo);	
-				actualizar_feromona_online(H,nuevo_nodo);
+				//actualizar_feromona_online(H,nuevo_nodo);
 				H.nodo_actual = nuevo_nodo;
 			}
 			imprimir_camino(H);
 			P.push_back(H);
 		}
 		calcular_longitudes();//
-		actualizar_feromona_offline();
+		actualizar_feromona();
 		imprimir_poblacion();
 		P.clear();
+
+		//reiniciar();
 	}
 }
 
@@ -252,7 +254,10 @@ void sis_hormigas::calcular_longitudes(){
 		H.longitud=s;
 	}
 	sort(P.begin(), P.end(), Mejor);
+
+	//mejor local
 	mejor_local = P[0];
+	peor_local = P.back(); // P[ P.size()-1 ]
 	//mejor global
 	if(mejor_local.longitud < mejor_global.longitud){
 		mejor_global = mejor_local;
@@ -267,12 +272,12 @@ void sis_hormigas::imprimir_camino(hormiga H){
 	cout<<"]"<<endl;
 }
 
-void sis_hormigas::actualizar_feromona_offline(){
+void sis_hormigas::actualizar_feromona(){
 	//evaporacion
 	for (int i = 0; i < TAM_CROM; ++i){
 		for (int j = 0; j < TAM_CROM; ++j){
 			if(i!=j){
-				F[i][j] += p_evaporacion * F[i][j];
+				F[i][j] += (1-p_evaporacion) * F[i][j];
 			}	
 		}
 	}
@@ -280,18 +285,28 @@ void sis_hormigas::actualizar_feromona_offline(){
 	for (int j = 1; j < mejor_global.camino.size(); ++j){
 		int h = mejor_global.camino[j-1];
 		int k = mejor_global.camino[j];
-		
-		F[h][k] += (1.0-p_evaporacion ) * 1/mejor_global.longitud;
-		
-		if(F[h][k] > F_max){ F[h][k] = F_max; }
-		if(F[h][k] < F_min){ F[h][k] = F_min; }
+		F[h][k] += 1/mejor_global.longitud;
+	}
+	//evaporar el camino de la peor solucion que no pertenesca a la mejor global
+	for (int j = 1; j < peor_local.camino.size(); ++j){
+		int h = peor_local.camino[j-1];
+		int k = peor_local.camino[j];
+		if(!existe_camino(mejor_global,h,k)){
+			F[h][k] += (1-p_evaporacion) * F[h][k];
+		}
 	}
 }
 
-void sis_hormigas::actualizar_feromona_online(hormiga H, int nodo){
-	int i = H.nodo_actual;
-	int j = nodo;
-	F[i][j] += (1 - phi)*F[i][j] + phi*feromona_inicial;
+bool sis_hormigas::existe_camino(hormiga H, int r, int s){
+	for (int i = 1; i < H.camino.size(); ++i){
+		int h = H.camino[i-1];
+		int j = H.camino[i];
+		if( (h==r && j==s) ){ //|| (h==s && j==r)){//?
+			return true;
+		}else{
+			return false;
+		}
+	}
 }
 
 void sis_hormigas::imprimir_poblacion(){ 
@@ -323,6 +338,16 @@ bool sis_hormigas::visitado(hormiga H, int nodo){
 	return false;
 }
 
+void sis_hormigas::reiniciar(){
+	for (int i = 0; i < F.size(); ++i){
+		for (int j = 0; j < F[0].size(); ++j){
+			if( i!=j ){
+				F[i][j] = feromona_inicial;
+			}
+		}
+	}
+}
+
 int main(){
 	int iteraciones=1;
 	sis_hormigas SH(iteraciones);
@@ -330,5 +355,6 @@ int main(){
 	SH.imprimir_V();
 	SH.imprimir_F();
 	SH.run();
+
 	return 0;
 }
