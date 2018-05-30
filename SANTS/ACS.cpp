@@ -7,7 +7,7 @@ double inf = 10000000.00001;
 const int TAM_CROM = 7;//5;//10;
 char LABELS[]={'A','B','C','D','E','F','G','H','I','J'}; 
 
-/*
+
 double DISTANCIAS[TAM_CROM][TAM_CROM]={
 					{ 0,50,	50,	94, 50},
 					{50, 0,	22,	50, 36},
@@ -23,7 +23,8 @@ double FLUJO[TAM_CROM][TAM_CROM]={
 					{0,3,0,0,1},
 					{3,0,0,1,0}
 					};
-*/
+
+/*
 double DISTANCIAS[TAM_CROM][TAM_CROM]{
 	{0,35,71,99,71,75,41},
 	{35,0,42,80,65,82,47},
@@ -43,7 +44,7 @@ double FLUJO[TAM_CROM][TAM_CROM]{
 	{0,0,0,3,0,0,0},
 	{0,1,1,0,0,0,0},
 	{2,0,0,1,0,0,0}
-};
+};*/
 
 typedef vector<int> vi;
 typedef vector<double> vd;
@@ -127,13 +128,14 @@ sis_hormigas::sis_hormigas(int iteraciones){
 				V[i][j] = 0.0;
 				F[i][j] = 0.0;
 			}else{
+				//if(FL[i][j]==0){FL[i][j]=1e-6;}
 				F[i][j] = feromona_inicial;
 				//construccion de matriz de visibilidad
 				double e=0;
 				for (int k = 0; k < TAM_CROM; ++k){
 					e += FLUJO[k][i] * DISTANCIAS[j][k];
 				}
-				V[i][j] = 0;
+				V[i][j] = 1e-10;
 				if(e!=0){
 					V[i][j] = 1.0/e;
 				}
@@ -178,7 +180,7 @@ void sis_hormigas::run(){
 	for (int i = 0; i < num_iteraciones; ++i){
 		cout<<"\n_________ Iteracion "<<i<<" _________"<<endl;
 		for (int j = 0; j < num_hormigas; ++j){
-			cout<<"HOTMIGA: "<<i+1<<endl;
+			cout<<"------HORMIGA: "<<j+1<<"------"<<endl;
 			hormiga H;
 			H.camino.push_back(nodo_inicial);
 			H.nodo_actual=nodo_inicial;
@@ -200,6 +202,7 @@ void sis_hormigas::run(){
 
 int sis_hormigas::intensificacion(hormiga H){
 	//argmax
+	cout<<"intensificacion"<<endl;
 	double arg_max= -inf;
 	int nodo_elegido;
 	for (int nodo = 0; nodo < TAM_CROM; ++nodo){
@@ -211,10 +214,12 @@ int sis_hormigas::intensificacion(hormiga H){
 			} 
 		}
 	}
+	cout<<"siguiente nodo "<< LABELS[nodo_elegido]<<"\n"<<endl;
 	return nodo_elegido;
 }
 int sis_hormigas::diversificacion(hormiga H){
 	//sumatoria
+	cout<<"diversificacion"<<endl;
 	vd probabilidades(TAM_CROM);
 	double suma = 0.0;
 	vi no_visitados;
@@ -239,6 +244,7 @@ int sis_hormigas::diversificacion(hormiga H){
 	if(nuevo_nodo < 0){
 		nuevo_nodo = no_visitados[ rand()%no_visitados.size() ];
 	}
+	cout<<"siguiente nodo "<< LABELS[nuevo_nodo]<<"\n"<<endl;
 	return nuevo_nodo;
 }
 
@@ -305,7 +311,6 @@ void sis_hormigas::actualizar_feromona_offline(){
 		for (int j = 0; j < TAM_CROM; ++j){
 			if(i!=j){
 				F[i][j] = p_evaporacion * F[i][j];
-				F[j][i] = F[i][j]; //espejo
 			}	
 		}
 	}
@@ -364,7 +369,7 @@ bool sis_hormigas::visitado(hormiga H, int nodo){
 }
 
 int main(){
-	int iteraciones=10;
+	int iteraciones=30;
 	sis_hormigas SH(iteraciones);
 	SH.imprimir_D();
 	SH.imprimir_V();
