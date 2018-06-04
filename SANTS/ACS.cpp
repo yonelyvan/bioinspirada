@@ -24,27 +24,7 @@ double FLUJO[TAM_CROM][TAM_CROM]={
 					{3,0,0,1,0}
 					};
 
-/*
-double DISTANCIAS[TAM_CROM][TAM_CROM]{
-	{0,35,71,99,71,75,41},
-	{35,0,42,80,65,82,47},
-	{71,42,0,45,49,79,55},
-	{99,80,45,0,36,65,65},
-	{71,65,49,36,0,31,32},
-	{75,82,79,65,31,0,36},
-	{41,47,55,65,32,36,0}
-};
 
-
-double FLUJO[TAM_CROM][TAM_CROM]{
-	{0,2,0,0,0,0,2},
-	{2,0,3,0,0,1,0},
-	{0,3,0,0,0,1,0},
-	{0,0,0,0,3,0,1},
-	{0,0,0,3,0,0,0},
-	{0,1,1,0,0,0,0},
-	{2,0,0,1,0,0,0}
-};*/
 
 typedef vector<int> vi;
 typedef vector<double> vd;
@@ -356,8 +336,6 @@ void sis_hormigas::imprimir_poblacion(){
 	}
 	cout<<" costo: "<<mejor_global.longitud<<endl;
 }
-
-
 
 bool sis_hormigas::visitado(hormiga H, int nodo){
 	for (int i = 0; i < H.camino.size() ; ++i){
