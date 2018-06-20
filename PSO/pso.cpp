@@ -99,7 +99,7 @@ void calcular_velocidades(poblacion &P, particula mejor_l, particula mejor_g){
 
 void run(){
 	int tan_pob=4;
-	int num_it = 100;
+	int num_it = 3;
 	poblacion P;
 	P = get_poblacion(tan_pob);
 	imprimir_poblacion(P);
