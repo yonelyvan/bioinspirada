@@ -294,11 +294,13 @@ void sis_hormigas::imprimir_poblacion(){
 		cout<<endl;
 	}
 	//cout<<"Poblacion:"<<endl;
+	/*
 	cout<<"\nMejor Hormiga Global: ";
 	for (int i = 0; i < mejor_global.camino.size(); ++i){
 		cout<<LABELS[mejor_global.camino[i]]<<" ";
 	}
 	cout<<" costo: "<<mejor_global.longitud<<endl;
+	*/
 }
 
 double sis_hormigas::get_longitud(hormiga H){
@@ -313,7 +315,7 @@ double sis_hormigas::get_longitud(hormiga H){
 
 
 void sis_hormigas::busqueda_local(hormiga &HRM){
-	int num_sucesores = 100;
+	int num_sucesores = 10;
 	//generar sucesores
 	bool flag=true;
 	bool se_mejorado = false;
@@ -357,6 +359,7 @@ void sis_hormigas::busqueda_local(hormiga &HRM){
 		}
 	}
 }
+
 
 void run(){
 	int iteraciones = 100; //ciudades de 0-9

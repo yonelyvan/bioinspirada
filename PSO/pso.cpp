@@ -117,7 +117,7 @@ void run(){
 		imprimir_poblacion(P);
 		calular_fitness(P);
 		mejor_l = mejor(P);
-		if(mejor_l.fitness > mejor_g.fitness){
+		if(mejor_l.fitness < mejor_g.fitness){
 			mejor_g = mejor_l;
 		}
 	}	

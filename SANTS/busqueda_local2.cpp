@@ -401,7 +401,7 @@ void sis_hormigas::busqueda_local(hormiga &HRM){
 
 
 int main(){
-	int iteraciones=30;
+	int iteraciones=100;
 	sis_hormigas SH(iteraciones);
 	SH.imprimir_D();
 	SH.imprimir_V();
