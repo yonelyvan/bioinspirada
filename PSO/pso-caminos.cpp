@@ -40,7 +40,7 @@ double DISTANCES[TAM_CROM][TAM_CROM]={
 					{	11,	27,	29,	42,	33,	81,	48,	24,	9,	0}
 					};
 */
-
+//DECBA
 double DISTANCES[TAM_CROM][TAM_CROM]={
 									{0,1,3,4,5},
 									{1,0,1,4,8},
@@ -148,7 +148,7 @@ vvi restar(particula a, particula b){
 bool repetido(vvi V,vi a){
 	for (vi t:V){
 		if( t[0]==a[0] && t[1]==a[1]){
-			return true;
+			return false;//true;
 		}
 	}
 	return false;
@@ -187,14 +187,12 @@ string print_velocidad(vvi A){
 //La velocidad de una partícula es una secuencia de intercambio de posiciones (swap).
 void calcular_velocidades(poblacion &P, particula mejor_l, particula mejor_g){
 	for (int i = 0; i < P.size(); ++i){
-		// w*P[i].vx
 		vvi ml = restar(mejor_l,P[i]);
 		vvi mg = restar(mejor_g,P[i]);
-		cout<<i<<") pbest-x(t-1) = [ "<<print_velocidad(ml)<<"]"<<endl;
-		cout<<" pbest-x(t-1) + gbest - x(t-1) = [ "<<print_velocidad(mg)<<"]"<<endl;
-		vvi vml= unir(P[i].velocidad,ml );
-		P[i].velocidad =  unir(vml, mg );//unir y eliminar repetidos
-		cout<<" [ "<<print_velocidad(P[i].velocidad)<<"]"<<endl;
+		//cout<<i<<") pbest-x(t-1) = [ "<<print_velocidad(ml)<<"]"<<endl;
+		//cout<<" pbest-x(t-1) + gbest - x(t-1) = [ "<<print_velocidad(mg)<<"]"<<endl;
+		P[i].velocidad = unir(ml,mg); //unir(unir(P[i].velocidad, ml ), mg); //
+		//cout<<" [ "<<print_velocidad(P[i].velocidad)<<"]"<<endl;
 
 		P[i] = swaps(P[i] , P[i].velocidad);
 		P[i].fitness = get_fitness(P[i]);
@@ -204,7 +202,7 @@ void calcular_velocidades(poblacion &P, particula mejor_l, particula mejor_g){
 
 void run(){
 	int tan_pob=8;
-	int num_it = 3;
+	int num_it = 200;
 	poblacion P, Ppri;
 	P = get_poblacion_inicial(tan_pob);
 	imprimir_poblacion(P);
