@@ -290,7 +290,7 @@ double distancia(particula I1, particula I2){
 	return 2*dx + 2*dy;
 }
 
-poblacion get_poblacion_frontera(poblacion P){
+poblacion get_poblacion_frontera(poblacion P, particula &m_local){
 	double D = 20.0;
 	int tam_poblacion = P.size();
 	poblacion new_P;
@@ -303,15 +303,15 @@ poblacion get_poblacion_frontera(poblacion P){
 	while(fl){
 		for (auto F : fronteras){
 			index_f++;
-			//cout<<"frontera: "<<index_f<<endl;
+			cout<<"frontera: "<<index_f<<endl;
 			for(int i=0; i<F.size(); i++){//frontera ordenada cresiente
 				if(i==0 || i==F.size()-1){
-					//cout<<i+1<<") "<<fx(F[i])<<" "<<gx(F[i])<<"	"<<"	|"<<F[i].fitness<<endl;
+					cout<<i+1<<") "<<fx(F[i])<<" "<<gx(F[i])<<"	"<<"	|"<<F[i].fitness<<endl;
 					new_P.push_back(F[i]);
 					cont++;
 				}else{
 					if( distancia(F[i-1], F[i+1]) > D){//distancia
-						//cout<<i+1<<") "<<fx(F[i])<<" "<<gx(F[i])<<"	"<<"	|"<<F[i].fitness<<endl;
+						cout<<i+1<<") "<<fx(F[i])<<" "<<gx(F[i])<<"	"<<"	|"<<F[i].fitness<<endl;
 						new_P.push_back(F[i]);
 						cont++;
 					}
@@ -321,15 +321,17 @@ poblacion get_poblacion_frontera(poblacion P){
 			if(cont == tam_poblacion){fl=0; break;}
 		}
 	}
+	int selected = rand()%(fronteras[0].size());
+	m_local = fronteras[0][ selected ];
 	return new_P;
 }
 
 
 //===============================================
 void run(){
-	int tan_pob=8;
+	int tan_pob=20;
 	int num_it = 2;
-	poblacion P, Ppri;
+	poblacion P, p_frontera;
 	P = get_poblacion_inicial(tan_pob);
 	imprimir_poblacion(P);
 	particula mejor_g;
@@ -343,13 +345,13 @@ void run(){
 		restar(P[0],P[1]);
 		calcular_velocidades(P,mejor_l, mejor_g);
 		imprimir_poblacion(P);
-		mejor_l = mejor(P);
+		//mejor_l = mejor(P);
+		p_frontera = get_poblacion_frontera(P,mejor_l);
 	
-		if(mejor_l.fitness < mejor_g.fitness){
+		
+		if( fx(mejor_l) < fx(mejor_g) && gx(mejor_l) < gx(mejor_g) ){
 			mejor_g = mejor_l;
 		}
-		//P=get_poblacion_frontera(P);
-
 	}
 }
 

@@ -2,6 +2,7 @@
 #define see(X) cout<<#X<<" "<<X<<endl;
 using namespace std;
 
+
 double getRandom(double li, double ls){  return li + static_cast <double> (rand()) /( static_cast <double> (RAND_MAX/(ls-li)));}
 
 typedef vector<double> vd;
@@ -172,7 +173,7 @@ double distancia(particula I1, particula I2){
 	return 2*dx + 2*dy;
 }
 
-poblacion get_poblacion_frontera(poblacion P){
+poblacion get_poblacion_frontera(poblacion P, particula &m_local){
 	double D = 20.0;
 	int tam_poblacion = P.size();
 	poblacion new_P;
@@ -203,15 +204,26 @@ poblacion get_poblacion_frontera(poblacion P){
 			if(cont == tam_poblacion){fl=0; break;}
 		}
 	}
+	int selected = rand()%(fronteras[0].size());
+	m_local = fronteras[0][ selected ];
 	return new_P;
 }
 
 
 //===============================================
 
+poblacion unir_v(poblacion a, poblacion b){
+	for (auto e:b){
+		a.push_back(e);
+	}
+	return a;
+}
+
+
 void run(){
-	int tan_pob=50;
-	int num_it = 20;
+	poblacion P_frontera;
+	int tan_pob=20;
+	int num_it = 10;
 	poblacion P;
 	P = get_poblacion(tan_pob);
 	imprimir_poblacion(P);
@@ -228,11 +240,14 @@ void run(){
 		calcular_velocidades(P,mejor_l, mejor_g);
 		imprimir_poblacion(P);
 		calular_fitness(P);
-		mejor_l = mejor(P);
-		if(mejor_l.fitness < mejor_g.fitness){
+		poblacion P = get_poblacion_frontera(P,mejor_l);//mejor local
+		//P = unir_v(P_frontera,P);
+		//vector<poblacion> fronteras = get_fronteras(P);
+		//P_frontera = fronteras[0];
+		if( fx(mejor_l) < fx(mejor_g) && gx(mejor_l) < gx(mejor_g) ){
 			mejor_g = mejor_l;
 		}
-		P = get_poblacion_frontera(P);
+
 	}	
 }
 

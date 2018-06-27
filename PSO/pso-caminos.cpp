@@ -133,7 +133,7 @@ vvi restar(particula a, particula b){
 			swap( b.cro[i],b.cro[index] );
 			//guardar swap
 			vi so;
-			so.push_back(i);
+			so.push_back(i);//
 			so.push_back(index);
 			so.push_back(1);//probabilidad phi
 			ss.push_back(so);
@@ -189,10 +189,12 @@ void calcular_velocidades(poblacion &P, particula mejor_l, particula mejor_g){
 	for (int i = 0; i < P.size(); ++i){
 		vvi ml = restar(mejor_l,P[i]);
 		vvi mg = restar(mejor_g,P[i]);
-		//cout<<i<<") pbest-x(t-1) = [ "<<print_velocidad(ml)<<"]"<<endl;
-		//cout<<" pbest-x(t-1) + gbest - x(t-1) = [ "<<print_velocidad(mg)<<"]"<<endl;
-		P[i].velocidad = unir(ml,mg); //unir(unir(P[i].velocidad, ml ), mg); //
-		//cout<<" [ "<<print_velocidad(P[i].velocidad)<<"]"<<endl;
+		//P[i].velocidad = unir(ml,mg); 
+		unir(unir(P[i].velocidad, ml ), mg); //
+		
+		cout<<i<<") pbest-x(t-1) = [ "<<print_velocidad(ml)<<"]"<<endl;
+		cout<<" pbest-x(t-1) + gbest - x(t-1) = [ "<<print_velocidad(mg)<<"]"<<endl;
+		cout<<" [ "<<print_velocidad(P[i].velocidad)<<"]"<<endl;
 
 		P[i] = swaps(P[i] , P[i].velocidad);
 		P[i].fitness = get_fitness(P[i]);
@@ -202,7 +204,7 @@ void calcular_velocidades(poblacion &P, particula mejor_l, particula mejor_g){
 
 void run(){
 	int tan_pob = 8;
-	int num_it = 4;
+	int num_it = 5;
 	poblacion P, Ppri;
 	P = get_poblacion_inicial(tan_pob);
 	imprimir_poblacion(P);
