@@ -27,6 +27,10 @@ double w[]={1,1}; //wfx, wgx
 double fx(particula I){ return 4.0*pow(I.x,2.0) + 4.0*pow(I.y,2.0); }
 double gx(particula I){ return pow((I.x-5),2.0) + pow((I.y-5),2.0); }
 
+double get_fitness(particula I){
+	return w[0]*fx(I) + w[1]*gx(I);
+}
+
 double LI = -5;
 double LS = 5;
 
@@ -51,9 +55,19 @@ poblacion get_poblacion(int tam){
 		pp.y=getRandom(LI,LS); 		
 		pp.vx=getRandom(LI,LS); 		
 		pp.vy=getRandom(LI,LS);
+		pp.fitness = get_fitness(pp)
 		P.push_back(pp);
 	}
 	return P;
+}
+
+particula get_particula(){
+	particula pp;
+	pp.x=getRandom(LI,LS); 		
+	pp.y=getRandom(LI,LS); 		
+	pp.vx=getRandom(LI,LS); 		
+	pp.vy=getRandom(LI,LS);
+	return pp;
 }
 
 void calular_fitness(poblacion &P){
@@ -62,9 +76,7 @@ void calular_fitness(poblacion &P){
 	}
 }
 
-double get_fitness(particula I){
-	return w[0]*fx(I) + w[1]*gx(I);
-}
+
 
 void imprimir_poblacion(poblacion P){
 	int i=0;
@@ -115,6 +127,7 @@ void calcular_velocidades(poblacion &P, particula mejor_l, particula mejor_g){
 		if( P[i].y > LS  ){ P[i].y = LS;}
 		if( P[i].x < LI  ){ P[i].x = LI;}
 		if( P[i].y < LI  ){ P[i].y = LI;}
+		P[i].fitness = get_fitness(P[i]);
 	}
 }
 
@@ -206,7 +219,8 @@ poblacion get_poblacion_frontera(poblacion P, particula &m_local){
 	}
 	int selected = rand()%(fronteras[0].size());
 	m_local = fronteras[0][ selected ];
-	return new_P;
+	//return new_P;
+	return fronteras[0];
 }
 
 
@@ -222,32 +236,41 @@ poblacion unir_v(poblacion a, poblacion b){
 
 void run(){
 	poblacion P_frontera;
-	int tan_pob=20;
-	int num_it = 10;
+	//int tan_pob=20;
+	int num_it = 60;
 	poblacion P;
-	P = get_poblacion(tan_pob);
-	imprimir_poblacion(P);
-	calular_fitness(P);
-	imprimir_finess(P);
+	particula p_inicial=get_particula();
+	P.push_back( p_inicial );
+	//P = get_poblacion(tan_pob);
+	//imprimir_poblacion(P);
+	//calular_fitness(P);
+	//imprimir_finess(P);
 	particula mejor_g;
-	particula mejor_l;
-	mejor_g = mejor(P);
-	mejor_l = mejor_g;
+	particula mejor_l= p_inicial;
+	poblacion repo_mejor_g; //
+	poblacion repo_mejor_l; //
+	repo_mejor_g.push_back(p_inicial);
+	//mejor_g = mejor(P);
+	//mejor_l = mejor_g;
+	particula nueva_particula; 
 	for (int it = 0; it < num_it; ++it){
-		cout<<"________________"<<it<<"________________"<<endl;
-		cout<<"Mejor :"<<" x1="<<mejor_g.x<<"	x2="<<mejor_g.y<<"	fitness="<<mejor_g.fitness<<endl;
-		cout<<"Cúmulo de Particulas Siguietes"<<endl;
-		calcular_velocidades(P,mejor_l, mejor_g);
-		imprimir_poblacion(P);
-		calular_fitness(P);
-		poblacion P = get_poblacion_frontera(P,mejor_l);//mejor local
-		//P = unir_v(P_frontera,P);
-		//vector<poblacion> fronteras = get_fronteras(P);
-		//P_frontera = fronteras[0];
-		if( fx(mejor_l) < fx(mejor_g) && gx(mejor_l) < gx(mejor_g) ){
-			mejor_g = mejor_l;
-		}
+		poblacion new_P = get_poblacion(4);
+		repo_mejor_l = get_poblacion_frontera(new_P,mejor_l);
+		
+		mejor_g = repo_mejor_g[ rand()%repo_mejor_g.size() ];
+		//velocidad
+		calcular_velocidades(new_P,mejor_l, mejor_g);
+		//posicion
+		imprimir_poblacion(new_P);
 
+		//cout<<"________________"<<it<<"________________"<<endl;
+		//cout<<"Mejor :"<<" x1="<<mejor_g.x<<"	x2="<<mejor_g.y<<"	fitness="<<mejor_g.fitness<<endl;
+		//cout<<"Cúmulo de Particulas Siguietes"<<endl;
+
+
+		//actualizar poblacioon
+		repo_mejor_g  = get_poblacion_frontera(P,mejor_l);//mejor local
+		P = repo_mejor_g;
 	}	
 }
 

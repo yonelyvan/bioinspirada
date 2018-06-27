@@ -62,7 +62,6 @@ double fx(particula I){
 
 double get_fitness(particula I){
 	return fx(I);
-	//return w[0]*fx(I) + w[1]*gx(I);
 }
 
 poblacion get_poblacion_inicial(int tam_poblacion){
@@ -145,24 +144,14 @@ vvi restar(particula a, particula b){
 	return ss;
 }
 
-bool repetido(vvi V,vi a){
-	for (vi t:V){
-		if( t[0]==a[0] && t[1]==a[1]){
-			return false;//true;
-		}
-	}
-	return false;
-}
-
 vvi unir(vvi a, vvi b){
 	for (vi bi : b){
-		if( !repetido(a,bi)){
-			a.push_back(bi);
-		}
+		a.push_back(bi);
 	}
 	return a;
 }
 
+//so [swap_i, swap_j, probabilidad]
 particula swaps(particula a, vvi ss){
 	for (vi so:ss){
 		swap(a.cro[so[0]], a.cro[so[1]]); //sin prob
@@ -189,8 +178,8 @@ void calcular_velocidades(poblacion &P, particula mejor_l, particula mejor_g){
 	for (int i = 0; i < P.size(); ++i){
 		vvi ml = restar(mejor_l,P[i]);
 		vvi mg = restar(mejor_g,P[i]);
-		//P[i].velocidad = unir(ml,mg); 
-		unir(unir(P[i].velocidad, ml ), mg); //
+		P[i].velocidad = unir(ml,mg); 
+		//P[i].velocidad = unir(unir(P[i].velocidad, ml ), mg);
 		
 		cout<<i<<") pbest-x(t-1) = [ "<<print_velocidad(ml)<<"]"<<endl;
 		cout<<" pbest-x(t-1) + gbest - x(t-1) = [ "<<print_velocidad(mg)<<"]"<<endl;
@@ -231,3 +220,17 @@ int main(){
 	run();	
 	return 0;
 }
+
+
+
+
+/*
+bool repetido(vvi V,vi a){
+	for (vi t:V){
+		if( t[0]==a[0] && t[1]==a[1]){
+			return false;//true;
+		}
+	}
+	return false;
+}
+*/

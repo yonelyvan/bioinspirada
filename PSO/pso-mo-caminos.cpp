@@ -102,7 +102,7 @@ double get_fitness(particula I){
 }
 
 
-poblacion get_poblacion_inicial(int tam_poblacion){
+poblacion get_poblacion(int tam_poblacion){
 	poblacion P;
 	for (int i = 0; i < tam_poblacion; ++i){
 		particula I;
@@ -119,6 +119,23 @@ poblacion get_poblacion_inicial(int tam_poblacion){
 	}
 	return P;
 }
+
+particula get_particula(){
+	particula I;
+	for (int j = 0; j < TAM_CROM; ++j){
+		I.cro.push_back(cities[j]);//0,1,..,9 //ciudades ordenadas
+	}
+	for (int j = 0; j < TAM_CROM; ++j){
+		int n = rand()%TAM_CROM;
+		int m = rand()%TAM_CROM;
+		swap(I.cro[n],I.cro[m]);	
+	}	
+	I.fitness = get_fitness(I);
+	return I;
+}
+
+
+
 
 string p_cro(particula I){
 	string c="";
@@ -323,14 +340,63 @@ poblacion get_poblacion_frontera(poblacion P, particula &m_local){
 	}
 	int selected = rand()%(fronteras[0].size());
 	m_local = fronteras[0][ selected ];
-	return new_P;
+	//return new_P;
+	return fronteras[0];
 }
 
 
 //===============================================
+
+
 void run(){
-	int tan_pob=20;
-	int num_it = 2;
+	poblacion P_frontera;
+	//int tan_pob=20;
+	int num_it = 40;
+	poblacion P;
+	particula p_inicial=get_particula();
+	P.push_back( p_inicial );
+	//P = get_poblacion(tan_pob);
+	//imprimir_poblacion(P);
+	//calular_fitness(P);
+	//imprimir_finess(P);
+	particula mejor_g;
+	particula mejor_l= p_inicial;
+	poblacion repo_mejor_l;
+	poblacion repo_mejor_g; //
+	repo_mejor_g.push_back(p_inicial);
+	//mejor_g = mejor(P);
+	//mejor_l = mejor_g;
+	particula nueva_particula; 
+	for (int it = 0; it < num_it; ++it){
+		poblacion new_P = get_poblacion(4);
+		repo_mejor_l = get_poblacion_frontera(new_P,mejor_l);
+
+
+		mejor_g = repo_mejor_g[ rand()%repo_mejor_g.size() ];
+		cout<<"________________"<<it<<"________________"<<endl;
+		cout<<"Mejor : "<<p_cro(mejor_g)<<"	fitness= "<<mejor_g.fitness<<endl;
+		cout<<"Cúmulo de Particulas Siguietes"<<endl;
+		calcular_velocidades(P,mejor_l, mejor_g);
+		imprimir_poblacion(P);
+		repo_mejor_g  = get_poblacion_frontera(P,mejor_l);//mejor local
+		P = repo_mejor_g;
+	}	
+}
+
+
+int main(){
+	run();	
+	return 0;
+}
+
+
+
+
+
+/*
+void run(){
+	int tan_pob=50;
+	int num_it = 10;
 	poblacion P, p_frontera;
 	P = get_poblacion_inicial(tan_pob);
 	imprimir_poblacion(P);
@@ -348,14 +414,8 @@ void run(){
 		//mejor_l = mejor(P);
 		p_frontera = get_poblacion_frontera(P,mejor_l);
 	
-		
 		if( fx(mejor_l) < fx(mejor_g) && gx(mejor_l) < gx(mejor_g) ){
 			mejor_g = mejor_l;
 		}
 	}
-}
-
-int main(){
-	run();	
-	return 0;
-}
+}*/
