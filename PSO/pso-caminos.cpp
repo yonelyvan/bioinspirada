@@ -201,8 +201,8 @@ void calcular_velocidades(poblacion &P, particula mejor_l, particula mejor_g){
 
 
 void run(){
-	int tan_pob=8;
-	int num_it = 200;
+	int tan_pob = 8;
+	int num_it = 4;
 	poblacion P, Ppri;
 	P = get_poblacion_inicial(tan_pob);
 	imprimir_poblacion(P);

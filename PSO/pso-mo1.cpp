@@ -22,7 +22,7 @@ bool Mejor(particula a, particula b){
 	return false;
 }
 
-double w[]={1,1};
+double w[]={1,1}; //wfx, wgx
 double fx(particula I){ return 4.0*pow(I.x,2.0) + 4.0*pow(I.y,2.0); }
 double gx(particula I){ return pow((I.x-5),2.0) + pow((I.y-5),2.0); }
 
