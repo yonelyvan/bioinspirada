@@ -10,12 +10,31 @@ typedef struct{
 	vi cro;
 	vvi velocidad; 
 	double fitness;
+}historial;
+
+
+typedef struct{
+	vi cro;
+	vvi velocidad; 
+	double fitness;
+	vector<historial> H;
 }particula;
 
-typedef particula particula;
+/*
+void operator =(const historial &p1, const particula &p2){
+    Pareja res( p1.a + p2.a, p1.b + p2.b );
+    return res;
+}
+*/
 
 typedef vector<particula> poblacion;
+//typedef particula particula;
 
+bool Mejorh(historial a, historial b){
+	if(a.fitness < b.fitness)//< minimizar | > maximizar
+		return true;
+	return false;
+}
 
 bool Mejor(particula a, particula b){
 	if(a.fitness < b.fitness)//< minimizar | > maximizar
@@ -241,6 +260,7 @@ string print_velocidad(vvi A){
 //La velocidad de una partícula es una secuencia de intercambio de posiciones (swap).
 void calcular_velocidades(poblacion &P, poblacion repo_g){
 	for (int i = 0; i < P.size(); ++i){
+		//*** 
 		particula mejor_l = P[ rand()%P.size() ]; //mejor local
 		particula mejor_g = repo_g[ rand()%repo_g.size() ]; //mejor global
 
@@ -346,20 +366,33 @@ void imprimir_soluciones_no_dominales(poblacion P){
 	}
 }
 
+void actualizar_r_pesonal(poblacion &P){
+	for (auto &p: P){
+		historial hh;
+		hh.cro = p.cro;
+		hh.velocidad = p.velocidad;
+		hh.fitness = p.fitness;
+		p.H.push_back(hh);
+		
+		vector<historial> hist = p.H; 
+		sort(hist.begin(), hist.end(), Mejorh);
+		p.cro = hist[0].cro;
+		p.velocidad = hist[0].velocidad;
+		p.fitness = hist[0].fitness;
+		p.H = hist;
+	}
+}
+
 
 void run(){
 	int N =20;
 	int num_it=10;
 	poblacion P;
-	poblacion repo_g;
-	poblacion repo_per;
-	particula mejor_g;
-	particula mejor_l;
 	
 	P = get_poblacion(N);
-	vector<poblacion> r=get_poblacion_frontera(P);
-	repo_g = r[0]; //actualizar repositorio global
-	repo_per = r[1]; //actualizar repositorio personal
+	vector<poblacion> r = get_poblacion_frontera(P);
+	poblacion repo_g = r[0]; //actualizar repositorio global
+	actualizar_r_pesonal(P); //actualizar repositorio personal
 	imprimir_poblacion(P);
 
 	int it =0;
@@ -368,9 +401,9 @@ void run(){
 
 		vector<poblacion> r=get_poblacion_frontera(P);
 		repo_g = r[0]; //actualizar repositorio global
-		repo_per = r[1]; //actualizar repositorio personal
+		actualizar_r_pesonal(P); //actualizar repositorio personal
 		
-		cout<<"________________"<<it<<"________________"<<endl;
+		cout<<"________________Iteracion "<<it<<"________________"<<endl;
 		imprimir_poblacion(P);
 		imprimir_soluciones_no_dominales(repo_g);
 		it++;

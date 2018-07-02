@@ -232,8 +232,9 @@ void run(){
 	poblacion P;
 	poblacion repo_g;
 	poblacion repo_per;
-	particula mejor_g;
-	particula mejor_l;
+
+	//particula mejor_g;
+	//particula mejor_l;
 	
 	P = get_poblacion(N);
 	vector<poblacion> r=get_poblacion_frontera(P);
@@ -262,7 +263,3 @@ int main(){
 	run();
 	return 0;
 }
-
-
-
-
