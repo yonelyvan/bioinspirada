@@ -55,7 +55,7 @@ poblacion get_poblacion(int tam){
 		pp.y=getRandom(LI,LS); 		
 		pp.vx=getRandom(LI,LS); 		
 		pp.vy=getRandom(LI,LS);
-		pp.fitness = get_fitness(pp)
+		pp.fitness = get_fitness(pp);
 		P.push_back(pp);
 	}
 	return P;
@@ -67,6 +67,7 @@ particula get_particula(){
 	pp.y=getRandom(LI,LS); 		
 	pp.vx=getRandom(LI,LS); 		
 	pp.vy=getRandom(LI,LS);
+	pp.fitness = get_fitness(pp);
 	return pp;
 }
 
@@ -100,13 +101,15 @@ particula mejor(poblacion P){
 	return P[0];
 }
 
-void calcular_velocidades(poblacion &P, particula mejor_l, particula mejor_g){
+void calcular_velocidades(poblacion &P, poblacion repo_g){
 	//double phi_1 = 2.0;
 	//double phi_2 = 2.0;
 	double rand_1 = getRandom(0,1);
 	double rand_2 = getRandom(0,1);
 	double w = getRandom(0,1);
 	for (int i = 0; i < P.size(); ++i){
+		particula mejor_l = P[ rand()%P.size() ]; //mejor local
+		particula mejor_g = repo_g[ rand()%repo_g.size() ]; //mejor global
 		//vx
 		rand_1 = getRandom(0,1);
 		rand_2 = getRandom(0,1);
@@ -186,96 +189,80 @@ double distancia(particula I1, particula I2){
 	return 2*dx + 2*dy;
 }
 
-poblacion get_poblacion_frontera(poblacion P, particula &m_local){
-	double D = 20.0;
+
+vector<poblacion> get_poblacion_frontera(poblacion P){
+	double D = 8.0;
 	int tam_poblacion = P.size();
-	poblacion new_P;
-	vector<poblacion> fronteras = get_fronteras(P);
-	// Nueva Poblacion
-	int cont =0;
-	int fl=1;
-	
-	int index_f=0;
-	while(fl){
-		for (auto F : fronteras){
-			index_f++;
-			cout<<"frontera: "<<index_f<<endl;
-			for(int i=0; i<F.size(); i++){//frontera ordenada cresiente
-				if(i==0 || i==F.size()-1){
-					cout<<i+1<<") "<<fx(F[i])<<" "<<gx(F[i])<<"	"<<"	|"<<F[i].fitness<<endl;
-					new_P.push_back(F[i]);
-					cont++;
-				}else{
-					if( distancia(F[i-1], F[i+1]) > D){//distancia
-						cout<<i+1<<") "<<fx(F[i])<<" "<<gx(F[i])<<"	"<<"	|"<<F[i].fitness<<endl;
-						new_P.push_back(F[i]);
-						cont++;
-					}
-				}
-				if(cont == tam_poblacion){fl=0; break;}
+	vector<poblacion> fronteras = get_frontier(P);
+	poblacion F = fronteras[0];
+	poblacion P_resto = fronteras[1];
+	poblacion P_frontera;
+	for(int i=0; i<F.size(); i++){//frontera ordenada cresiente
+		if(i==0 || i==F.size()-1){
+			//cout<<i+1<<") "<<fx(F[i])<<" "<<gx(F[i])<<"	"<<"	|"<<F[i].fitness<<endl;
+			P_frontera.push_back(F[i]);
+		}else{
+			if( distancia(F[i-1], F[i+1]) > D){//distancia
+				//cout<<i+1<<") "<<fx(F[i])<<" "<<gx(F[i])<<"	"<<"	|"<<F[i].fitness<<endl;
+				P_frontera.push_back(F[i]);
 			}
-			if(cont == tam_poblacion){fl=0; break;}
 		}
 	}
-	int selected = rand()%(fronteras[0].size());
-	m_local = fronteras[0][ selected ];
-	//return new_P;
-	return fronteras[0];
+	vector<poblacion> R;
+	R.push_back( P_frontera );
+	R.push_back( P_resto );
+	return R;
 }
-
 
 //===============================================
 
-poblacion unir_v(poblacion a, poblacion b){
-	for (auto e:b){
-		a.push_back(e);
-	}
-	return a;
-}
 
+void imprimir_soluciones_no_dominales(poblacion P){
+	cout<<"\nsoluciones_no_dominales"<<endl;
+	int i =0;
+	for( auto p:P){
+		cout<<i+1<<") "<<fx(p)<<" "<<gx(p)<<"	"<<"	|"<<p.fitness<<endl;
+		i++;
+	}
+}
 
 void run(){
-	poblacion P_frontera;
-	//int tan_pob=20;
-	int num_it = 60;
+	int N =10;
+	int num_it=2;
 	poblacion P;
-	particula p_inicial=get_particula();
-	P.push_back( p_inicial );
-	//P = get_poblacion(tan_pob);
-	//imprimir_poblacion(P);
-	//calular_fitness(P);
-	//imprimir_finess(P);
+	poblacion repo_g;
+	poblacion repo_per;
 	particula mejor_g;
-	particula mejor_l= p_inicial;
-	poblacion repo_mejor_g; //
-	poblacion repo_mejor_l; //
-	repo_mejor_g.push_back(p_inicial);
-	//mejor_g = mejor(P);
-	//mejor_l = mejor_g;
-	particula nueva_particula; 
-	for (int it = 0; it < num_it; ++it){
-		poblacion new_P = get_poblacion(4);
-		repo_mejor_l = get_poblacion_frontera(new_P,mejor_l);
+	particula mejor_l;
+	
+	P = get_poblacion(N);
+	vector<poblacion> r=get_poblacion_frontera(P);
+	repo_g = r[0]; //actualizar repositorio global
+	repo_per = r[1]; //actualizar repositorio personal
+	imprimir_poblacion(P);
+
+	int it =0;
+	while (it<num_it){
+		calcular_velocidades(P, repo_g);
+
+		vector<poblacion> r=get_poblacion_frontera(P);
+		repo_g = r[0]; //actualizar repositorio global
+		repo_per = r[1]; //actualizar repositorio personal
 		
-		mejor_g = repo_mejor_g[ rand()%repo_mejor_g.size() ];
-		//velocidad
-		calcular_velocidades(new_P,mejor_l, mejor_g);
-		//posicion
-		imprimir_poblacion(new_P);
-
-		//cout<<"________________"<<it<<"________________"<<endl;
-		//cout<<"Mejor :"<<" x1="<<mejor_g.x<<"	x2="<<mejor_g.y<<"	fitness="<<mejor_g.fitness<<endl;
-		//cout<<"Cúmulo de Particulas Siguietes"<<endl;
-
-
-		//actualizar poblacioon
-		repo_mejor_g  = get_poblacion_frontera(P,mejor_l);//mejor local
-		P = repo_mejor_g;
-	}	
+		cout<<"________________"<<it<<"________________"<<endl;
+		imprimir_poblacion(P);
+		imprimir_soluciones_no_dominales(repo_g);
+		it++;
+	}
 }
+
 
 
 int main(){
 	run();
 	return 0;
 }
+
+
+
+
