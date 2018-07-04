@@ -126,12 +126,12 @@ void genNuevaObs(poblacion & P, int pos,int D, int SN){
 	calcFit(s);
 
 	if(s.fit < P[pos].fit ){//
-		s.cont++; 
-		P[pos].cont++;	
+		s.cont=0; //P[pos].cont=0;	
+		P[pos]=s;
 	}
 	else{
-		s.cont=0; P[pos].cont=0;	
-		P[pos]=s;
+		//s.cont++; 
+		P[pos].cont++;	
 	}
 	printSol("Imprimiendo primera opcion \n",s);
 	printpoblacion("\nNuevos Mejores \n", P);
@@ -149,11 +149,11 @@ poblacion bestSols(poblacion &P , poblacion &cand){
 	poblacion B;
 	for(int i=0;i<P.size();i++){
 		if(cand[i].fit < P[i].fit){
-			P[i].cont++;
-			B.push_back(P[i]);
+			B.push_back(cand[i]);	
 		}
 		else{
-			B.push_back(cand[i]);	
+			P[i].cont++;
+			B.push_back(P[i]);
 		}
 	}
 	return B;
@@ -215,7 +215,7 @@ int run(){
 		cand = genCandidatas(P,CS,D,SN);//producir nuevas soluciones
 		evaluar_poblacion(cand);//evaluar
 		
-		comppoblacion(P,cand);
+		//comppoblacion(P,cand);
 		printpoblacion("\nCalculando Candidatos fEval y fitness \n", cand);
 		P = bestSols(P,cand);//conservar mejores soluciones
 		printpoblacion("\nMejores Soluciones \n", P);	
