@@ -30,11 +30,7 @@ void operator =(const historial &p1, const particula &p2){
 typedef vector<particula> poblacion;
 //typedef particula particula;
 
-bool Mejorh(historial a, historial b){
-	if(a.fitness < b.fitness)//< minimizar | > maximizar
-		return true;
-	return false;
-}
+
 
 bool Mejor(particula a, particula b){
 	if(a.fitness < b.fitness)//< minimizar | > maximizar
@@ -82,6 +78,9 @@ double DISTANCES[TAM_CROM][TAM_CROM]={
 									{5,8,1,2,0}};
 */			
 
+
+
+
 //distancias
 double fx(particula I){  
 	double s=0;
@@ -103,6 +102,15 @@ double gx(particula I){
 	return s;
 }
 
+bool Mejorh(historial a, historial b){
+	particula pa, pb;
+	pa.cro = a.cro;
+	pb.cro = b.cro;
+	if( fx(pa) < fx(pa) && gx(pa) < gx(pb) ) //< minimizar | > maximizar
+		return true;
+	return false;
+}
+
 //ordenamiento fot fx |(x,y) == (fx,gx)
 bool decresiente(particula a, particula b){
 	double fa = fx(a);
@@ -120,6 +128,11 @@ double get_fitness(particula I){
 	return w[0]*fx(I) + w[1]*gx(I);
 }
 
+void evaluar(poblacion &P){
+	for(particula &p : P){
+		p.fitness = get_fitness(p);
+	}
+}
 
 poblacion get_poblacion(int tam_poblacion){
 	poblacion P;
@@ -172,10 +185,6 @@ void imprimir_poblacion(poblacion P){
 	}
 }
 
-particula mejor(poblacion P){
-	sort(P.begin(), P.end(), Mejor);
-	return P[0];
-}
 
 bool particulas_iguales(particula a, particula b){
 	for (int i = 0; i < a.cro.size(); ++i){
@@ -260,8 +269,12 @@ string print_velocidad(vvi A){
 //La velocidad de una partícula es una secuencia de intercambio de posiciones (swap).
 void calcular_velocidades(poblacion &P, poblacion repo_g){
 	for (int i = 0; i < P.size(); ++i){
-		//*** 
-		particula mejor_l = P[ rand()%P.size() ]; //mejor local
+		//mejor local y global
+		historial h = P[i].H[ rand()%P[i].H.size() ];
+		particula mejor_l; //mejor local
+		mejor_l.cro = h.cro;
+		mejor_l.velocidad = h.velocidad;
+
 		particula mejor_g = repo_g[ rand()%repo_g.size() ]; //mejor global
 
 		vvi ml = restar(mejor_l,P[i]);
@@ -368,43 +381,57 @@ void imprimir_soluciones_no_dominales(poblacion P){
 
 void actualizar_r_pesonal(poblacion &P){
 	for (auto &p: P){
+		//actual se inserta
 		historial hh;
 		hh.cro = p.cro;
 		hh.velocidad = p.velocidad;
 		hh.fitness = p.fitness;
 		p.H.push_back(hh);
-		
+		//calcular el mejor
 		vector<historial> hist = p.H; 
 		sort(hist.begin(), hist.end(), Mejorh);
 		p.cro = hist[0].cro;
 		p.velocidad = hist[0].velocidad;
 		p.fitness = hist[0].fitness;
 		p.H = hist;
+		//
 	}
 }
 
 
 void run(){
-	int N =20;
-	int num_it=10;
+	int N =10;
+	int num_it=20;
 	poblacion P;
 	
 	P = get_poblacion(N);
 	vector<poblacion> r = get_poblacion_frontera(P);
-	poblacion repo_g = r[0]; //actualizar repositorio global
+	poblacion repo_g = r[0]; //G
 	actualizar_r_pesonal(P); //actualizar repositorio personal
 	imprimir_poblacion(P);
 
 	int it =0;
 	while (it<num_it){
+		//seleccionar mejor posicion personal (elemento aleatorio en Pi)
+		//seleccionar mejor posicion global (elemento aleatorio en G)
+		//calcular velocidad de la i-esima particula 
+		//calcular posicion  de la i-esima particula
 		calcular_velocidades(P, repo_g);
 
-		vector<poblacion> r=get_poblacion_frontera(P);
-		repo_g = r[0]; //actualizar repositorio global
-		actualizar_r_pesonal(P); //actualizar repositorio personal
+
+		evaluar(P);
+		for(particula pi : P){
+			repo_g.push_back(pi);
+		}
+		vector<poblacion> r=get_poblacion_frontera(repo_g); //
+		//actualizar repositorio global
+		repo_g = r[0]; 
+		//actualizar repositorio personal
+		actualizar_r_pesonal(P); 
 		
 		cout<<"________________Iteracion "<<it<<"________________"<<endl;
 		imprimir_poblacion(P);
+		//soluciones no dominales
 		imprimir_soluciones_no_dominales(repo_g);
 		it++;
 	}
@@ -413,10 +440,7 @@ void run(){
 
 
 int main(){
+	srand (time(NULL));//
 	run();	
 	return 0;
 }
-
-
-
-
