@@ -26,6 +26,7 @@ double genRandom(double li, double ls){
 
 void printSol(string s,Sol a){
 	cout<<s;
+	//cout<<a.val[0]<<"  "<<a.val[1]<<"  "<<a.fEval<<"  "<<a.fit<<endl;
 	cout<<a.val[0]<<"  "<<a.val[1]<<"  "<<a.fEval<<"  "<<a.fit<<" "<<a.cont<<endl;
 }
 
@@ -49,7 +50,8 @@ void printpoblacion(string s,poblacion E){
 }
 
 void calcfEvalSol(Sol &a){
-	 a.fEval=pow(a.val[0],2)+pow(a.val[1],2);
+	a.fEval=pow( abs(a.val[0]),2.0)+pow( abs(a.val[1]),2.0);
+	//a.fEval=pow( a.val[0],2.0)+pow( a.val[1],2.0);
 }
 
 void calcFit(Sol &a){
@@ -86,52 +88,53 @@ poblacion genCandidatas(poblacion P,int CS, int D, int SN){
 	poblacion cand;
 	for(int i=0;i<CS;i++){
 		double fi=genRandom(-1,1);//rand
-		int j = round((genRandom(0,D-1)));
-		int k = round(genRandom(0,SN-1));
-		while(k==i)
-			 k = round(genRandom(0,SN-1));
-		if(k!=i){
-			Sol s;
-			s.val[(j+1)%2] = P[i].val[(j+1)%2];
-			s.val[j]       = P[i].val[j]+ fi * ( P[i].val[j] - P[k].val[j] );
-			s.fEval=0;
-			s.fit=0;
-			s.cont=0;
-			cand.push_back(s);
+		int j = rand()%D;
+		int k = rand()%SN;
+		while(k==i){
+			 k = rand()%SN;
 		}
+		Sol s;
+		s.val[0] = P[i].val[0];
+		s.val[1] = P[i].val[1];
+		//		
+		s.val[j] = P[i].val[j]+ fi * ( P[i].val[j] - P[k].val[j] );
+		s.fEval=0;
+		s.fit=0;
+		s.cont=0;
+		cand.push_back(s);
 	}
 	return cand;
 }
 
 void genNuevaObs(poblacion & P, int pos,int D, int SN){
-	// vi,j = xi,j + fi · (xi,j − xk,j)
 	cout<<"\n>>> pos elegida: "<<pos<<endl;
 	double fi=genRandom(-1,1);
-	int j = round(genRandom(0,D-1));
-	int k = round(genRandom(0,SN-1));
-	while(k==pos)
-		k = round(genRandom(0,SN-1));
-	if(k!=pos){
-		Sol s;
-		s.val[(j+1)%2] = P[pos].val[(j+1)%2];
-		s.val[j]       = P[pos].val[j]+ fi * (P[pos].val[j]-P[k].val[j]);
-		s.fEval=0;
-		s.fit=0;
-		s.cont=0;
-		calcfEvalSol(s);
-		calcFit(s);
-		
-		if(s.fit < P[pos].fit ){
-			s.cont++; 
-			P[pos].cont++;	
-		}
-		else{
-			s.cont=0; P[pos].cont=0;	
-			P[pos]=s;
-		}
-		printSol("Imprimiendo primera opcion \n",s);
-		printpoblacion("\nNuevos Mejores \n", P);
+	int j = rand()%D;
+	int k = rand()%SN;
+	while(k==pos){
+		k = rand()%SN;
 	}
+	Sol s;
+	s.val[0] = P[pos].val[0];
+	s.val[1] = P[pos].val[1];
+	//
+	s.val[j] = P[pos].val[j]+ fi * (P[pos].val[j] - P[k].val[j]);
+	s.fEval=0;
+	s.fit=0;
+	s.cont=0;
+	calcfEvalSol(s);
+	calcFit(s);
+
+	if(s.fit < P[pos].fit ){//
+		s.cont++; 
+		P[pos].cont++;	
+	}
+	else{
+		s.cont=0; P[pos].cont=0;	
+		P[pos]=s;
+	}
+	printSol("Imprimiendo primera opcion \n",s);
+	printpoblacion("\nNuevos Mejores \n", P);
 }
 
 void comppoblacion(poblacion & P, poblacion & cand){
@@ -141,6 +144,7 @@ void comppoblacion(poblacion & P, poblacion & cand){
 		}
 	}
 }
+
 poblacion bestSols(poblacion &P , poblacion &cand){
 	poblacion B;
 	for(int i=0;i<P.size();i++){
@@ -148,8 +152,9 @@ poblacion bestSols(poblacion &P , poblacion &cand){
 			P[i].cont++;
 			B.push_back(P[i]);
 		}
-		else
+		else{
 			B.push_back(cand[i]);	
+		}
 	}
 	return B;
 }
@@ -172,10 +177,6 @@ int probSeleccion(poblacion & P){
 	return P.size()-1;
 }
 
-Sol CalcBest(poblacion & A){
-	sort(A.begin(), A.end(),compare);
-	return A[0];
-}
 
 void excedLimt(poblacion & P, int L ){
 	for(auto &y: P){
@@ -192,50 +193,78 @@ void excedLimt(poblacion & P, int L ){
 	}
 }
 
-int main(){
-	srand (time(NULL));
+int run(){
 	int CS=4; //tamaño de colmena
 	int D=2 ; //Numero de variables
 	int L=(CS*D)/2; //num de iteracciones antes de abandonar la fuente
-	int MCN=1; //Maximo numero de ciclos que itera el algorimo
+	int MCN=2; //Maximo numero de ciclos que itera el algorimo
 	int SN=3; //Numero de Soluciones
-	poblacion cand, best;
+	poblacion cand;
 	
 	poblacion P = get_poblacion_inicial(CS);//poblacion inicial
 	evaluar_poblacion(P);//evaluar poblacion
 	printpoblacion("Calculando Iniciales fEval y fitness\n", P);
+	
 	int ite = 0;
-	Sol mejor_s;//mejor
-
-	while(ite<MCN){
+	Sol mejor_s = P[0];//mejor
+	while(ite < MCN){
 		cout<<"____________________ Iteracion "<<ite<<"____________________"<<endl;
 		cand.clear();
 		printpoblacion("\nCalculando Iniciales fEval y fitness \n", P);
 		
-		cand = genCandidatas(P,CS,D,SN);//producir nuevas soluciones --
-		evaluar_poblacion(cand);//valuar
+		cand = genCandidatas(P,CS,D,SN);//producir nuevas soluciones
+		evaluar_poblacion(cand);//evaluar
+		
 		comppoblacion(P,cand);
 		printpoblacion("\nCalculando Candidatos fEval y fitness \n", cand);
-		
-		P = bestSols(P,cand);
+		P = bestSols(P,cand);//conservar mejores soluciones
 		printpoblacion("\nMejores Soluciones \n", P);	
 		
 		int obs=0;
 		while(obs<SN){
 			cout<<"\n------ Observadora "<<obs<<" ------"<<endl;
-			double solElegida= probSeleccion(P);
+			double solElegida= probSeleccion(P);//calcular probabilidades ruleta
 			printpoblacionProb("\n Mejores Soluciones con Probabilidad \n", P);
 			genNuevaObs(P,solElegida,D,SN);//--
 			obs++;
 		}
 		
-		excedLimt(P,L);//--
+		excedLimt(P,L);//fuentes abandonadas
 		printpoblacionProb("\nCiclo Terminado , Comprobando si se acabo recursos \n", P);
-		sort(P.begin(),P.end(),compare);
+		sort(P.begin(),P.end(),compare);//memorizar
 		if( P[0].fit < mejor_s.fit )
 			mejor_s= P[0];
 		printSol("\nEl mejor acumulado\n", mejor_s);
 		ite++;		
 	}
+}
+
+int main(){
+	srand (time(NULL));
+	run();
 	return 0;
 }
+
+
+/*
+Begin
+	Iniciar la poblacion de soluciones
+	Evaluar poblacion
+	
+	g=0
+	while(g<MCN){
+		Producir nuevas soluciones para las abejas empleadas y evaluarlas.
+		Conservar la mejor solucion entre la actual y la candidata.
+
+		Seleccionar las soluciones que seran visitadas por una abeja observadora segun su aptitud.
+
+		Producir nuevas soluciones para las abejas observadoras y evaluarlas. AND
+		Conservar la mejor solucion entre la actual y la candidata.
+
+		Determinar si existe una fuente abandonada y reemplazarla utilizando una abeja exploradora.
+
+		Memorizar la mejor solucionencontrada hasta este momento.
+		++g
+	}
+
+*/

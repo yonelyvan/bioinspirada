@@ -79,28 +79,6 @@ void calular_fitness(poblacion &P){
 
 
 
-void imprimir_poblacion(poblacion P){
-	int i=0;
-	for (particula pp : P){
-		++i;
-		cout<<i<<") x1 = "<<pp.x<<" "<<"	x2 = "<<pp.y<<"	v1 = "<<pp.vx<<"	v2 = "<<pp.vy<<endl;
-	}
-}
-
-void imprimir_finess(poblacion &P){
-	cout<<"____Fitness_____"<<endl;
-	int i=0;
-	for (particula pp : P){
-		++i;
-		cout<<i<<") "<<pp.fitness<<endl; 
-	}
-}
-
-particula mejor(poblacion P){
-	sort(P.begin(), P.end(), Mejor);
-	return P[0];
-}
-
 void calcular_velocidades(poblacion &P, poblacion repo_g){
 	//double phi_1 = 2.0;
 	//double phi_2 = 2.0;
