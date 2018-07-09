@@ -20,12 +20,7 @@ typedef struct{
 	vector<historial> H;
 }particula;
 
-/*
-void operator =(const historial &p1, const particula &p2){
-    Pareja res( p1.a + p2.a, p1.b + p2.b );
-    return res;
-}
-*/
+
 
 typedef vector<particula> poblacion;
 //typedef particula particula;
@@ -68,15 +63,6 @@ double COSTS[10][10]={
 					{	11,	26,	8,	14,	56,	22,	25,	66,	0,	54},
 					{	9,	43,	36,	12,	23,	14,	60,	85,	54,	0}
 					};
-//DECBA
-/*
-double DISTANCES[TAM_CROM][TAM_CROM]={
-									{0,1,3,4,5},
-									{1,0,1,4,8},
-									{3,1,0,5,1},
-									{4,4,5,0,2},
-									{5,8,1,2,0}};
-*/			
 
 
 
@@ -417,7 +403,6 @@ void run(){
 		//calcular velocidad de la i-esima particula 
 		//calcular posicion  de la i-esima particula
 		calcular_velocidades(P, repo_g);
-
 
 		evaluar(P);
 		for(particula pi : P){

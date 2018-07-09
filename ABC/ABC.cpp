@@ -206,7 +206,7 @@ int run(){
 	int CS=6; //tamaño de colmena
 	int D=2 ; //Numero de variables
 	int L=(CS*D)/2; //num de iteracciones antes de abandonar la fuente
-	int MCN=50; //Maximo numero de ciclos que itera el algorimo
+	int MCN=1; //Maximo numero de ciclos que itera el algorimo
 	int SN=3; //Numero de Soluciones
 	poblacion cand;
 	
@@ -221,7 +221,7 @@ int run(){
 		cand.clear();
 		printpoblacion("\nCalculando Iniciales fEval y fitness \n", P);
 		
-		cand = genCandidatas(P,CS,D,SN);//producir nuevas soluciones
+		cand = genCandidatas(P,CS,D,SN);//producir nuevas soluciones (fuentes)
 		evaluar_poblacion(cand);//evaluar
 		//
 		printpoblacion("\nCalculando Candidatos fEval y fitness \n", cand);
@@ -231,17 +231,16 @@ int run(){
 		int obs=0;
 		while(obs<SN){
 			cout<<"\n------ Observadora "<<obs<<" ------"<<endl;
-			double solElegida= probSeleccion(P);//calcular probabilidades ruleta
-			printpoblacionProb("\n Mejores Soluciones con Probabilidad \n", P);
+			double solElegida= probSeleccion(P);//calcular probabilidades ruleta /
 			genNuevaObs(P,solElegida,D,SN);//--
 			obs++;
 		}
 		
 		excedLimt(P,L);//fuentes abandonadas
 		printpoblacionProb("\nCiclo Terminado , Comprobando si se acabo recursos \n", P);
-		sort(P.begin(),P.end(),Mejor);//memorizar
+		sort(P.begin(),P.end(),Mejor);
 		if( P[0].fit > mejor_s.fit )
-			mejor_s= P[0];
+			mejor_s= P[0]; //memorizar
 		printSol("\nEl mejor acumulado\n", mejor_s);
 		ite++;		
 	}
@@ -277,4 +276,6 @@ Begin
 	}
 
 comppoblacion(P,cand);
+
+//printpoblacionProb("\n Mejores Soluciones con Probabilidad \n", P);
 */
